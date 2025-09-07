@@ -1,3 +1,6 @@
+<p align="right">
+  <a href="README_RU.md">Русская версия</a>
+</p>
 # Remnawave Manager v 0.5.6 ⚙️
 
 This script is a multi-functional tool for **managing and configuring Remnawave and Remnanode components** on a server. It significantly simplifies the process of deploying a VPN server by automating routine tasks such as installing Docker, setting up backups, a firewall, and SSH.
