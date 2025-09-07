@@ -1,5 +1,5 @@
 <p align="left">
-  <a href="README_RU.md">🇷🇺Русская версия</a>
+  <a href="README_RU.md">🇷🇺</a>
 </p>
 # Remnawave Manager v 0.5.6 ⚙️
 
