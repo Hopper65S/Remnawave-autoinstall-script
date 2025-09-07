@@ -209,21 +209,21 @@ lang_ru=(
     ["MENU_WARP"]="🛡️ Настройка WARP Proxy"
     ["WARP_PROXY_PROMPT"]="Что вы хотите сделать с WARP?"
     ["WARP_PROXY_MENU_HEADER"]="🛡️ Настройка WARP Proxy"
-    ["WARP_PROXY_MENU_INSTALL"]="⬇️ Установка WARP Native"
-    ["WARP_PROXY_MENU_UNINSTALL"]="🗑️ Удаление WARP Native"
-    ["WARP_PROXY_MENU_STATUS"]="📋 Проверить статус WARP Native"
+    ["WARP_PROXY_MENU_INSTALL"]="⬇️ Установка WARP"
+    ["WARP_PROXY_MENU_UNINSTALL"]="🗑️ Удаление WARP"
+    ["WARP_PROXY_MENU_STATUS"]="📋 Проверить статус WARP"
     ["WARP_STATUS_HEADER"]="🛡️ Проверка статуса WARP"
     ["WARP_INSTALL_CONNECT_START"]="⏳ Попытка подключения к WARP. Это может занять несколько секунд..."
-    ["WARP_PROXY_INSTALL_START"]="⚙️ Запуск установки WARP Native..."
-    ["WARP_PROXY_UNINSTALL_START"]="⚙️ Запуск процедуры удаления WARP Native..."
+    ["WARP_PROXY_INSTALL_START"]="⚙️ Запуск установки WARP..."
+    ["WARP_PROXY_UNINSTALL_START"]="⚙️ Запуск процедуры удаления WARP..."
     ["WARP_PROXY_STOPPING"]="🛑 Остановка интерфейса warp..."
     ["WARP_PROXY_REMOVING_FILES"]="🗑️ Удаление файлов конфигурации..."
     ["WARP_PROXY_REMOVING_PACKAGES"]="🗑️ Удаление пакетов wireguard..."
-    ["WARP_PROXY_INSTALL_SUCCESS"]="✅ WARP Native успешно установлен."
-    ["WARP_PROXY_UNINSTALL_COMPLETE"]="✅ Удаление WARP Native завершено."
-    ["WARP_PROXY_STATUS_CHECK"]="🔍 Проверка статуса WARP Native..."
-    ["WARP_PROXY_STATUS_RUNNING"]="✅ WARP Native активен."
-    ["WARP_PROXY_STATUS_NOT_RUNNING"]="❌ WARP Native не запущен."
+    ["WARP_PROXY_INSTALL_SUCCESS"]="✅ WARP успешно установлен."
+    ["WARP_PROXY_UNINSTALL_COMPLETE"]="✅ Удаление WARP завершено."
+    ["WARP_PROXY_STATUS_CHECK"]="🔍 Проверка статуса WARP..."
+    ["WARP_PROXY_STATUS_RUNNING"]="✅ WARP активен."
+    ["WARP_PROXY_STATUS_NOT_RUNNING"]="❌ WARP не запущен."
     ["DEPENDENCY_CHECK"]="⚙️ Проверка и установка необходимых зависимостей..."
     ["WARP_INSTALL_CHECK_OS"]="🔍 Проверка операционной системы..."
     ["WARP_INSTALL_DEPENDENCIES"]="⚙️ Установка необходимых пакетов..."
@@ -531,7 +531,7 @@ lang_ru=(
     ["ERROR_UPDATE_ENV"]="❌ Ошибка: Не удалось обновить .env файл."
     ["ERROR_RESTART_CADDY"]="❌ Ошибка: Не удалось перезапустить Caddy. Попробуйте вручную."
     ["CONTAINER_NOT_FOUND_LOGS"]="⚠️ Контейнер 'remnawave' не найден. Невозможно проверить логи."
-    ["WARP_PROXY_INSTALL_FAILED"]="❌ Ошибка: Не удалось установить WARP Native."
+    ["WARP_PROXY_INSTALL_FAILED"]="❌ Ошибка: Не удалось установить WARP."
     ["WARP_INSTALL_UNSUPPORTED_OS"]="❌ Этот скрипт поддерживает только Ubuntu и Debian."
     ["WARP_INSTALL_FAILED_REPO"]="❌ Ошибка: Не удалось добавить репозиторий Cloudflare. Выход."
     ["WARP_INSTALL_FAILED_INSTALL"]="❌ Ошибка: Не удалось установить cloudflare-warp. Выход."
@@ -823,21 +823,21 @@ lang_en=(
     ["MENU_WARP"]="5) 🛡️ WARP Proxy Setup"
     ["WARP_PROXY_PROMPT"]="What do you want to do with WARP?"
     ["WARP_PROXY_MENU_HEADER"]="🛡️ WARP Proxy Setup"
-    ["WARP_PROXY_MENU_INSTALL"]="1) ⬇️ Install WARP Native"
-    ["WARP_PROXY_MENU_UNINSTALL"]="2) 🗑️ Uninstall WARP Native"
-    ["WARP_PROXY_MENU_STATUS"]="3) 📋 Check WARP Native Status"
+    ["WARP_PROXY_MENU_INSTALL"]="1) ⬇️ Install WARP"
+    ["WARP_PROXY_MENU_UNINSTALL"]="2) 🗑️ Uninstall WARP"
+    ["WARP_PROXY_MENU_STATUS"]="3) 📋 Check WARP Status"
     ["WARP_STATUS_HEADER"]="🛡️ WARP Status Check"
     ["WARP_INSTALL_CONNECT_START"]="⏳ Attempting to connect to WARP. This may take a few seconds..."
-    ["WARP_PROXY_INSTALL_START"]="⚙️ Starting WARP Native installation..."
-    ["WARP_PROXY_UNINSTALL_START"]="⚙️ Starting WARP Native uninstallation procedure..."
+    ["WARP_PROXY_INSTALL_START"]="⚙️ Starting WARP installation..."
+    ["WARP_PROXY_UNINSTALL_START"]="⚙️ Starting WARP uninstallation procedure..."
     ["WARP_PROXY_STOPPING"]="🛑 Stopping warp interface..."
     ["WARP_PROXY_REMOVING_FILES"]="🗑️ Removing configuration files..."
     ["WARP_PROXY_REMOVING_PACKAGES"]="🗑️ Removing wireguard packages..."
-    ["WARP_PROXY_INSTALL_SUCCESS"]="✅ WARP Native successfully installed."
-    ["WARP_PROXY_UNINSTALL_COMPLETE"]="✅ WARP Native uninstallation complete."
-    ["WARP_PROXY_STATUS_CHECK"]="🔍 Checking WARP Native status..."
-    ["WARP_PROXY_STATUS_RUNNING"]="✅ WARP Native is active."
-    ["WARP_PROXY_STATUS_NOT_RUNNING"]="❌ WARP Native is not running."
+    ["WARP_PROXY_INSTALL_SUCCESS"]="✅ WARP successfully installed."
+    ["WARP_PROXY_UNINSTALL_COMPLETE"]="✅ WARP uninstallation complete."
+    ["WARP_PROXY_STATUS_CHECK"]="🔍 Checking WARP status..."
+    ["WARP_PROXY_STATUS_RUNNING"]="✅ WARP is active."
+    ["WARP_PROXY_STATUS_NOT_RUNNING"]="❌ WARP is not running."
     ["DEPENDENCY_CHECK"]="⚙️ Checking and installing necessary dependencies..."
     ["WARP_INSTALL_CHECK_OS"]="🔍 Checking operating system..."
     ["WARP_INSTALL_DEPENDENCIES"]="⚙️ Installing necessary packages..."
@@ -988,7 +988,7 @@ lang_en=(
     ["ERROR_UPDATE_ENV"]="❌ Error: Failed to update .env file."
     ["ERROR_RESTART_CADDY"]="❌ Error: Failed to restart Caddy. Try manually."
     ["CONTAINER_NOT_FOUND_LOGS"]="⚠️ Container 'remnawave' not found. Cannot check logs."
-    ["WARP_PROXY_INSTALL_FAILED"]="❌ Error: Failed to install WARP Native."
+    ["WARP_PROXY_INSTALL_FAILED"]="❌ Error: Failed to install WARP."
     ["WARP_INSTALL_UNSUPPORTED_OS"]="❌ This script only supports Ubuntu and Debian."
     ["WARP_INSTALL_FAILED_REPO"]="❌ Error: Failed to add Cloudflare repository. Exiting."
     ["WARP_INSTALL_FAILED_INSTALL"]="❌ Error: Failed to install cloudflare-warp. Exiting."
@@ -1663,7 +1663,7 @@ setup_ssh_and_user() {
     sleep 0.5
 }
 # =========================================================================
-# === Функции для установки, удаления и проверки статуса WARP Native ===
+# === Функции для установки, удаления и проверки статуса WARP ===
 # =========================================================================
 
 get_valid_port() {
@@ -1685,8 +1685,8 @@ get_valid_port() {
     done
 }
 
-# Функция для установки WARP Native (безопасная версия)
-install_warp_native() {
+# Функция для установки WARP 
+install_warp() {
     echo "================================================"
     echo "          🚀 УСТАНОВКА WARP          "
     echo "================================================"
@@ -1909,7 +1909,7 @@ check_warp_status() {
         fi
     done
 }
-uninstall_warp_native() {
+uninstall_warp() {
     echo "$(get_text WARP_PROXY_UNINSTALL_START)"
     sleep 2
     
@@ -3352,8 +3352,8 @@ warp_menu() {
             "$(get_text WARP_PROXY_PROMPT)"
         
         case "$choice_index" in
-            0) install_warp_native; break ;;
-            1) uninstall_warp_native; break ;;
+            0) install_warp; break ;;
+            1) uninstall_warp; break ;;
             2) check_warp_status; break ;;
             3) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
         esac
