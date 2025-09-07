@@ -1,4 +1,4 @@
-<p align="right">
+<p align="left">
   <a href="README.md">EN</a> | RU
 </p>
 # Remnawave Manager v 0.5.6 ⚙️
