@@ -32,4 +32,4 @@ This script is a multi-functional tool for **managing and configuring Remnawave 
 To install and run the script on your server, use the following `curl` command:
 
 ```bash
-curl -O [https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/setup_remnawave.sh](https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/setup_remnawave.sh) && chmod +x setup_remnawave.sh
+curl -O https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/setup_remnawave.sh && chmod +x setup_remnawave.sh
