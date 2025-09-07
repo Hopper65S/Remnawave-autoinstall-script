@@ -23,4 +23,4 @@ Remnawave Manager ⚙️
 🚀 Установка
 Для установки и запуска скрипта на сервере используйте следующую команду curl
 ```bash
-curl -O [https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/rmanagerscript](https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/rmanagerscript) && chmod +x rmanagerscript
+curl -O https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/rmanagerscript && chmod +x rmanagerscript
