@@ -5,7 +5,7 @@
 > **Совместимость:** Скрипт в настоящее время совместим с операционными системами **Ubuntu** и **Debian**.
 ### **Превью интерфейса скрипта**
 
-![Превью скрипта](https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/preview.png)
+![Превью скрипта](https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/blob/main/preview.png)
 ---
 
 ### **💾 Ключевые особенности**
