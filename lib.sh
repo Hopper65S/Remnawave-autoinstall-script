@@ -11,12 +11,12 @@ get_text() {
 }
 
 yn_prompt() {
-    local -a yn_options=("Да" "Нет")
+    local -a yn_options=("$(get_text YES)" "$(get_text NO)")
     local selected_index=0
     
     while true; do
         clear
-        echo -e "${ORANGE}$1${NC}" # Выводим текст вопроса
+        echo -e "${ORANGE}$1${NC}"
         echo ""
         
         for i in "${!yn_options[@]}"; do
@@ -28,7 +28,7 @@ yn_prompt() {
         done
         
         echo ""
-        echo -e "${ORANGE}Навигация: ↑↓, Выбор: Enter${NC}"
+        echo -e "${ORANGE}$(get_text PROMPT_NAVIGATION)${NC}"
         
         read -sn1 -r key
         
