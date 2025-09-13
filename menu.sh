@@ -270,7 +270,6 @@ remnawave_menu() {
 delete_menu() {
     while true; do
         clear
-        echo -e "${ORANGE}$(get_text MENU_HEADER_DELETE)${NC}"
         echo ""
         declare -a delete_menu_options
         delete_menu_options=(
@@ -278,8 +277,12 @@ delete_menu() {
             "$(get_text MENU_BACK)"
         )
         local choice_index
-        select_menu delete_menu_options "$(get_text MENU_PROMPT): " choice_index
-
+        select_menu \
+            delete_menu_options \
+            "$(get_text MENU_PROMPT)" \
+            choice_index \
+            "$(get_text MENU_HEADER_DELETE)" 
+        
         case "$choice_index" in
             0) cleanup_remnanode; sleep 1 ;;
             1) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
