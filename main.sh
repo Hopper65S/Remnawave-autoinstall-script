@@ -9,10 +9,34 @@ WHITE='\033[1;37m'
 CYAN='\033[0;36m'
 # Initial system update and setup
 clear
-apt install sudo &>/dev/null
+# apt install sudo &>/dev/null
+if ! command -v sudo &>/dev/null; then
+  echo "Installing sudo..."
+  apt-get update &>/dev/null
+  apt-get install sudo -y &>/dev/null
+  echo "Sudo installed."
+else
+  echo "Sudo is already installed. Skipping."
+fi
+
+# sudo apt-get update &>/dev/null
+echo "Updating package list..."
 sudo apt-get update &>/dev/null
-sudo apt-get install fonts-noto-color-emoji &>/dev/null
+echo "Update complete."
+
+# sudo apt-get install fonts-noto-color-emoji &>/dev/null
+if dpkg-query -W -f='${Status}' fonts-noto-color-emoji 2>/dev/null | grep -q "install ok installed"; then
+  echo "The fonts-noto-color-emoji package is already installed. Skipping."
+else
+  echo "Installing fonts-noto-color-emoji..."
+  sudo apt-get install fonts-noto-color-emoji -y &>/dev/null
+  echo "Fonts-noto-color-emoji installed."
+fi
+
+# sudo fc-cache -f -v &>/dev/null
+echo "Updating font cache..."
 sudo fc-cache -f -v &>/dev/null
+echo "Font cache updated.
 # Global variables
 VERSION="v 0.6.1"
 CONFIG_FILE=".env"
