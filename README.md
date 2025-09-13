@@ -27,11 +27,11 @@ This script is a multi-functional tool for **managing and configuring Remnawave 
 > **ATTENTION:** This script is still in development, and there may be some issues with its operation.
 ---
 
-### **🚀 Installation**
+### **🚀 Installation and Start**
 
 To install the script on your server, use the following `git clone` command:
 
 ```bash
-sudo git clone https://github.com/Hopper65S/Remnawave-autoinstall-script.git /opt/Remnawave-autoinstall-script && cd /opt/Remnawave-autoinstall-script && sleep 1 && chmod +x main.sh && ./main.sh
+[ -d "/opt/Remnawave-autoinstall-script" ] && sudo git -C "/opt/Remnawave-autoinstall-script" fetch --all && sudo git -C "/opt/Remnawave-autoinstall-script" reset --hard origin/main || sudo git clone https://github.com/Hopper65S/Remnawave-autoinstall-script.git /opt/Remnawave-autoinstall-script && cd /opt/Remnawave-autoinstall-script && chmod +x main.sh && ./main.sh
 ```
 

@@ -29,5 +29,5 @@
 ### **🚀 Установка**
 Чтобы установить скрипт на ваш сервер, используйте следующую команду `git clone`:
 ```bash
-sudo git clone https://github.com/Hopper65S/Remnawave-autoinstall-script.git /opt/Remnawave-autoinstall-script && cd /opt/Remnawave-autoinstall-script && sleep 1 && chmod +x main.sh && ./main.sh
+[ -d "/opt/Remnawave-autoinstall-script" ] && sudo git -C "/opt/Remnawave-autoinstall-script" fetch --all && sudo git -C "/opt/Remnawave-autoinstall-script" reset --hard origin/main || sudo git clone https://github.com/Hopper65S/Remnawave-autoinstall-script.git /opt/Remnawave-autoinstall-script && cd /opt/Remnawave-autoinstall-script && chmod +x main.sh && ./main.sh
 ```
