@@ -27,8 +27,12 @@
 ---
 
 ### **🚀 Установка**
-
-Для установки и запуска скрипта на сервере используйте следующую команду `curl`:
-
+Чтобы установить скрипт на ваш сервер, используйте следующую команду `git clone`:
 ```bash
-curl -O https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/setup_remnawave.sh && chmod +x setup_remnawave.sh
+sudo git clone https://github.com/Hopper65S/Remnawave-autoinstall-script.git /opt/Remnawave-autoinstall-script && cd /opt/Remnawave-autoinstall-script
+```
+### **🟢 Запуск скрипта**
+Чтобы запустить скрипт на вашем сервере, используйте эту команду:
+```bash
+chmod +x main.sh && ./main.sh
+```
