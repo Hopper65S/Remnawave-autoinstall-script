@@ -281,7 +281,8 @@ delete_menu() {
             delete_menu_options \
             "$(get_text MENU_PROMPT)" \
             choice_index \
-            "$(get_text MENU_HEADER_DELETE)" 
+            "$(get_text MENU_HEADER_DELETE)" \
+            "$(get_text MENU_PROMPT)"
         
         case "$choice_index" in
             0) cleanup_remnanode; sleep 1 ;;
