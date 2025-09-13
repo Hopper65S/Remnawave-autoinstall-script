@@ -36,7 +36,7 @@ fi
 # sudo fc-cache -f -v &>/dev/null
 echo "Updating font cache..."
 sudo fc-cache -f -v &>/dev/null
-echo "Font cache updated.
+echo "Font cache updated."
 # Global variables
 VERSION="v 0.6.1"
 CONFIG_FILE=".env"
