@@ -29,12 +29,13 @@ This script is a multi-functional tool for **managing and configuring Remnawave 
 
 ### **🚀 Installation**
 
-To install and run the script on your server, use the following `curl` command:
+To install the script on your server, use the following `curl` command:
 
 ```bash
 sudo git clone https://github.com/Hopper65S/Remnawave-autoinstall-script.git /opt/Remnawave-autoinstall-script && cd /opt/Remnawave-autoinstall-script
 ```
 ### **🟢 Start script**
+To start script on your server, use this command
 ```bash
 chmod +x main.sh && ./main.sh
 ```
