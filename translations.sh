@@ -7,6 +7,7 @@ lang_ru=(
     # === Главное меню и навигация ===
     ["MENU_HEADER_DELETE"]="🧹 Меню удаления"
     ["MENU_CLEANUP_NODE"]="Удалить Remnanode"
+    ["MENU_BACK"]="Назад"
     ["MENU_NODE"]="⚙️ Настройка ноды Remnanode"
     ["MENU_PANEL"]="🖥️ Настройка панели Remnawave"
     ["MENU_BACKUP"]="💾 Создание бэкапа базы данных"
@@ -631,6 +632,7 @@ lang_en=(
     # === Main Menu and Navigation ===
     ["MENU_HEADER_DELETE"]="🧹 Deletion Menu"
     ["MENU_CLEANUP_NODE"]="Cleanup Remnanode"
+    ["MENU_BACK"]="Back"
     ["MENU_NODE"]="⚙️ Configure Remnanode"
     ["MENU_PANEL"]="🖥️ Configure Remnawave Panel"
     ["MENU_BACKUP"]="💾 Create database backup"
