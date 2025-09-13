@@ -2,7 +2,7 @@
   EN | <a href="README_RU.md">RU</a>
 </p>
  
-# Remnawave Manager v 0.6.0 ⚙️
+# Remnawave Manager v 0.6.1 ⚙️
 
 This script is a multi-functional tool for **managing and configuring Remnawave and Remnanode components** on a server. It significantly simplifies the process of deploying a VPN server by automating routine tasks such as installing Docker, setting up backups, a firewall, and SSH.
 
@@ -32,10 +32,6 @@ This script is a multi-functional tool for **managing and configuring Remnawave 
 To install the script on your server, use the following `git clone` command:
 
 ```bash
-sudo git clone https://github.com/Hopper65S/Remnawave-autoinstall-script.git /opt/Remnawave-autoinstall-script && cd /opt/Remnawave-autoinstall-script
+sudo git clone https://github.com/Hopper65S/Remnawave-autoinstall-script.git /opt/Remnawave-autoinstall-script && cd /opt/Remnawave-autoinstall-script && sleep 1 && chmod +x main.sh && ./main.sh
 ```
-### **🟢 Start script**
-To start script on your server, use this command
-```bash
-chmod +x main.sh && ./main.sh
-```
+

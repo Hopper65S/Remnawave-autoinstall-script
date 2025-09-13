@@ -14,7 +14,7 @@ sudo apt-get update &>/dev/null
 sudo apt-get install fonts-noto-color-emoji &>/dev/null
 sudo fc-cache -f -v &>/dev/null
 # Global variables
-VERSION="v 0.6.0"
+VERSION="v 0.6.1"
 CONFIG_FILE=".env"
 export DUMMY_IP="1.1.1.1"
  #Libraries and Functions
