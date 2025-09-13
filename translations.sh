@@ -33,6 +33,9 @@ lang_ru=(
     ["CONFIG_SETUP_PROMPT"]="Настройки конфигурации (.env) не найдены. Они необходимы для автоматической настройки сервера.\nХотите настроить их сейчас?"
     ["CONFIG_REQUIRED_INFO"]="Для автоматической установки и работы скрипта необходим файл конфигурации.\nВы можете создать его сейчас или настроить позже в меню 'Редактировать .env'."
     # === Приветствие и служебные сообщения ===
+    ["YES"]="Да"
+    ["NO"]="Нет"
+    ["PROMPT_NAVIGATION"]="Навигация: ↑↓, Выбор: Enter"
     ["WELCOME_HEADER"]="👋 Remnawave Manager"
     ["WELCOME_TEXT1"]="Привет! Этот скрипт поможет тебе быстро и просто"
     ["WELCOME_TEXT2"]="установить и настроить ключевые компоненты:"
@@ -652,6 +655,9 @@ lang_en=(
     ["CONFIG_SETUP_PROMPT"]="Configuration settings (.env) not found. They are necessary for automatic server setup.\nDo you want to set them up now?"
     ["CONFIG_REQUIRED_INFO"]="For automatic installation and script operation, a configuration file is required.\nYou can create it now or set it up later in the 'Edit .env' menu."
     # === Welcome and Utility Messages ===
+    ["YES"]="Yes"
+    ["NO"]="No"
+    ["PROMPT_NAVIGATION"]="Navigation: ↑↓, Select: Enter"
     ["WELCOME_HEADER"]="👋 Remnawave Manager"
     ["WELCOME_TEXT1"]="Hello! This script will help you quickly and easily"
     ["WELCOME_TEXT2"]="install and configure key components:"
