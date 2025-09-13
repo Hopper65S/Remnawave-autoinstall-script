@@ -49,7 +49,7 @@ main() {
         echo ""
         read -p "Enter your choice / Введите ваш выбор: " choice_lang
         case "$choice_lang" in
-            1) echo "EN is not supported in this example. Switching to RU."; LANG_CHOICE="ru"; break ;;
+            1) LANG_CHOICE="en"; break ;;
             2) LANG_CHOICE="ru"; break ;;
             0) echo "$(get_text EXITING_SCRIPT)"; exit 0 ;;
             *) echo "$(get_text INVALID_INPUT)"; sleep 2 ;;
