@@ -10,7 +10,7 @@ This script is a multi-functional tool for **managing and configuring Remnawave 
 
 ### **Script Interface Preview**
 
-![Script Preview](https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/preview.png)
+![Script Preview](https://raw.githubusercontent.com/Hopper65S/Remnawave-autoinstall-script/main/assets/preview.png)
 ---
 
 ### **💾 Key Features**
