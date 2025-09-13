@@ -67,7 +67,7 @@ start() {
         main_menu_options \
         "$(get_text MENU_PROMPT)" \
         choice_index \
-        "$(get_text WELCOME_HEADER) ${VERSION}\n${GREEN}By Hopper${NC}"
+        "$(get_text WELCOME_HEADER) ${VERSION}\n${GREEN}By Hopper${NC}"\
         "$(get_text MAIN_MENU_PROMPT)"
     
     case "$choice_index" in
