@@ -275,7 +275,7 @@ delete_menu() {
         declare -a delete_menu_options
         delete_menu_options=(
             "$(get_text MENU_CLEANUP_NODE)"
-            "$(get_text CONFIG_MENU_BACK)"
+            "$(get_text GO_BACK)"
         )
         local choice_index
         select_menu delete_menu_options "$(get_text MENU_PROMPT): " choice_index
