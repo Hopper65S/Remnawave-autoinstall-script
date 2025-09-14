@@ -56,6 +56,7 @@ select_menu() {
                 if [[ "${menu_options[$selected_index]}" == "---" ]]; then
                     continue
                 fi
+                clear
                 result_var=$selected_index
                 break
                 ;;
