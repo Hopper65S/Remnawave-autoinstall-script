@@ -293,12 +293,21 @@ connect_warp() {
     echo "================================================"
     sleep 1
 
+    # Проверка, установлен ли пакет `cloudflare-warp`
+    if ! command -v warp-cli &> /dev/null; then
+        echo -e "${RED}❌ $(get_text ERROR_WARP_NOT_INSTALLED)${NC}"
+        echo -e "${YELLOW}ℹ️ $(get_text WARP_INSTALL_PROMPT)${NC}"
+        sleep 3
+        return 1
+    fi
+    
+    # Проверка текущего статуса WARP
     if sudo warp-cli status 2>/dev/null | grep -q "Connected"; then
         echo -e "${YELLOW}$(get_text WARP_ALREADY_CONNECTED)${NC}"
     else
         echo -e "${YELLOW}$(get_text WARP_CONNECTING_MSG)${NC}"
         if sudo warp-cli connect &>/dev/null; then
-            echo -e "${GREEN}$(get_text WARP_INSTALL_FINAL_SUCCESS)${NC}"
+            echo -e "${GREEN}$(get_text WARP_CONNECT_SUCCESS)${NC}"
         else
             echo -e "${RED}$(get_text WARP_CONNECT_ERROR)${NC}"
             return 1
