@@ -4,8 +4,8 @@ select_menu() {
     local prompt="$2"
     local -n result_var=$3
     local header="$4"
-    local prompt_text="$5" # <-- Новый параметр для текста "Пожалуйста выберете действие"
-    
+    local prompt_text="$5"
+
     local selected_index=0
     
     while true; do
@@ -14,15 +14,20 @@ select_menu() {
         echo ""
         
         for i in "${!menu_options[@]}"; do
-            if [[ $i -eq $selected_index ]]; then
-                echo -e "${GREEN}● ${menu_options[$i]}${NC}"
+            # Проверяем, является ли элемент разделителем
+            if [[ "${menu_options[$i]}" == "---" ]]; then
+                echo -e "${WHITE}-------------------------${NC}"
             else
-                echo -e "${ORANGE}○ ${menu_options[$i]}${NC}"
+                if [[ $i -eq $selected_index ]]; then
+                    echo -e "${GREEN}● ${menu_options[$i]}${NC}"
+                else
+                    echo -e "${ORANGE}○ ${menu_options[$i]}${NC}"
+                fi
             fi
         done
         
         echo ""
-        echo -e "${ORANGE}$prompt_text${NC}" # <-- Выводим новый текст
+        echo -e "${ORANGE}$prompt_text${NC}"
         echo -e "${ORANGE}$(get_text MENU_PROMPT_SELECT)${NC}"
         
         read -sn1 -r key
@@ -33,14 +38,26 @@ select_menu() {
                 read -sn1 -r -t 0.001 key
                 case "$key" in
                     A)
+                        # Пропускаем разделитель при навигации вверх
                         ((selected_index = (selected_index - 1 + ${#menu_options[@]}) % ${#menu_options[@]}))
+                        while [[ "${menu_options[$selected_index]}" == "---" ]]; do
+                            ((selected_index = (selected_index - 1 + ${#menu_options[@]}) % ${#menu_options[@]}))
+                        done
                         ;;
                     B)
+                        # Пропускаем разделитель при навигации вниз
                         ((selected_index = (selected_index + 1) % ${#menu_options[@]}))
+                        while [[ "${menu_options[$selected_index]}" == "---" ]]; do
+                            ((selected_index = (selected_index + 1) % ${#menu_options[@]}))
+                        done
                         ;;
                 esac
                 ;;
             "")
+                # При выборе Enter, если это разделитель, просто игнорируем
+                if [[ "${menu_options[$selected_index]}" == "---" ]]; then
+                    continue
+                fi
                 result_var=$selected_index
                 break
                 ;;
@@ -59,7 +76,7 @@ start() {
         "$(get_text MENU_EDIT_CONFIG)"
         "$(get_text MENU_DELETE)"
         "$(get_text START_MENU_ABOUT)"
-        "" 
+        "---"  # Используем разделитель
         "$(get_text SCRIPT_UPDATE)"
         "$(get_text MENU_EXIT)"
     )
@@ -82,9 +99,8 @@ start() {
         6) edit_config_menu; sleep 1 ;;
         7) delete_menu; sleep 1 ;;
         8) about_script; sleep 1 ;;
-        9) start ;; # Возврат к меню после нажатия
-        10) update_script; sleep 1 ;;
-        11) echo "$(get_text EXITING_SCRIPT)"; exit 0 ;;
+        9) update_script; sleep 1 ;; # Индексы изменились, разделитель не имеет индекса
+        10) echo "$(get_text EXITING_SCRIPT)"; exit 0 ;;
     esac
 }
 setup_config() {
