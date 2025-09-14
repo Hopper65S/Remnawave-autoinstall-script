@@ -297,6 +297,7 @@ delete_menu() {
         declare -a delete_menu_options
         delete_menu_options=(
             "$(get_text MENU_CLEANUP_NODE)"
+            "$(get_text MENU_UNINSTALL_SCRIPT)"
             "$(get_text MENU_BACK)"
         )
         local choice_index
@@ -309,7 +310,8 @@ delete_menu() {
         
         case "$choice_index" in
             0) cleanup_remnanode; sleep 1 ;;
-            1) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
+            1) uninstall_script ;;
+            2) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
         esac
     done
 }
