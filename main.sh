@@ -39,7 +39,7 @@ echo "Updating font cache..."
 sudo fc-cache -f -v &>/dev/null
 echo "Font cache updated."
 # Global variables
-VERSION="v 0.6.1"
+VERSION="v 0.6.2"
 CONFIG_FILE=".env"
 export DUMMY_IP="1.1.1.1"
  #Libraries and Functions
