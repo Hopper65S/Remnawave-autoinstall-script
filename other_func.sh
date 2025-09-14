@@ -311,11 +311,11 @@ EOF
 }
 update_script() {
     local SCRIPT_PATH="/opt/Remnawave-autoinstall-script"
+    local MAIN_SCRIPT="$SCRIPT_PATH/main.sh"
 
     echo ""
     echo -e "${YELLOW} $(get_text PULLING_LATEST_CHANGES)${NC}"
 
-    # Проверка, установлен ли Git
     if ! command -v git &> /dev/null; then
         echo -e "${RED}❌ $(get_text ERROR_GIT_NOT_INSTALLED)${NC}"
         echo -e "${YELLOW}ℹ️ $(get_text INSTALL_GIT_PROMPT)${NC}"
@@ -323,18 +323,25 @@ update_script() {
         return 1
     fi
 
-    # Использование 'sudo' для pull, так как папка /opt принадлежит root
-    if sudo git -C "$SCRIPT_PATH" pull &>/dev/null; then
-        echo -e "${GREEN}$(get_text UPDATE_SUCCESS)${NC}"
-    else
+    # Обновление с использованием git pull
+    if ! sudo git -C "$SCRIPT_PATH" pull &>/dev/null; then
         echo -e "${RED}$(get_text UPDATE_FAILED)${NC}"
         sleep 3
         return 1
     fi
+    echo -e "${GREEN}$(get_text UPDATE_SUCCESS)${NC}"
+    sleep 1
 
-    echo -e "${YELLOW}$(get_text RESTARTING_SCRIPT)${NC}"
-    sleep 3
-
-    # Перезапуск скрипта
-    exec "$SCRIPT_PATH/main.sh"
+    # Проверка, что файл скрипта существует и исполняемый
+    if [ -x "$MAIN_SCRIPT" ]; then
+        echo -e "${YELLOW}$(get_text RESTARTING_SCRIPT)${NC}"
+        sleep 2
+        # Перезапуск скрипта
+        exec "$MAIN_SCRIPT"
+    else
+        echo -e "${RED}❌ $(get_text RESTART_FAILED_ERROR)${NC}"
+        echo -e "${YELLOW}ℹ️ $(get_text RESTART_FAILED_PROMPT)${NC}"
+        sleep 5
+        return 1
+    fi
 }
