@@ -369,7 +369,8 @@ warp_menu() {
             1) uninstall_warp; break ;;
             2) check_warp_status; break ;;
             4) disconnect_warp; break;;
-            5) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
+            5) connect_warp; break;;
+            6) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
         esac
     done
 }
