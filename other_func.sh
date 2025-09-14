@@ -309,3 +309,32 @@ EOF
     sleep 1;
     start;
 }
+update_script() {
+    local SCRIPT_PATH="/opt/Remnawave-autoinstall-script"
+
+    echo ""
+    echo -e "${YELLOW} $(get_text PULLING_LATEST_CHANGES)${NC}"
+
+    # Проверка, установлен ли Git
+    if ! command -v git &> /dev/null; then
+        echo -e "${RED}❌ $(get_text ERROR_GIT_NOT_INSTALLED)${NC}"
+        echo -e "${YELLOW}ℹ️ $(get_text INSTALL_GIT_PROMPT)${NC}"
+        sleep 3
+        return 1
+    fi
+
+    # Использование 'sudo' для pull, так как папка /opt принадлежит root
+    if sudo git -C "$SCRIPT_PATH" pull &>/dev/null; then
+        echo -e "${GREEN}$(get_text UPDATE_SUCCESS)${NC}"
+    else
+        echo -e "${RED}$(get_text UPDATE_FAILED)${NC}"
+        sleep 3
+        return 1
+    fi
+
+    echo -e "${YELLOW}$(get_text RESTARTING_SCRIPT)${NC}"
+    sleep 3
+
+    # Перезапуск скрипта
+    exec "$SCRIPT_PATH/main.sh"
+}

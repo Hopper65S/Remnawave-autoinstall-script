@@ -59,6 +59,8 @@ start() {
         "$(get_text MENU_EDIT_CONFIG)"
         "$(get_text MENU_DELETE)"
         "$(get_text START_MENU_ABOUT)"
+        "" 
+        "$(get_text SCRIPT_UPDATE)"
         "$(get_text MENU_EXIT)"
     )
     
@@ -80,7 +82,9 @@ start() {
         6) edit_config_menu; sleep 1 ;;
         7) delete_menu; sleep 1 ;;
         8) about_script; sleep 1 ;;
-        9) echo "$(get_text EXITING_SCRIPT)"; exit 0 ;;
+        9) start ;; # Возврат к меню после нажатия
+        10) update_script; sleep 1 ;;
+        11) echo "$(get_text EXITING_SCRIPT)"; exit 0 ;;
     esac
 }
 setup_config() {
