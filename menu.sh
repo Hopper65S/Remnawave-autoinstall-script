@@ -256,12 +256,12 @@ remnawave_menu() {
             "$(get_text PANEL_MENU_PROMPT)"
         
         case "$choice_index" in
-            0) setup_remnawave; break ;;
-            1) upload_db; break ;;
-            2) change_panel_domain; break ;;
-            3) check_logs_and_suggest_fix; break ;;
-            4) install_caddy_docker; break ;;
-            5) check_panel_status; break ;;
+            0) setup_remnawave; remnawave_menu ;;
+            1) upload_db; remnawave_menu ;;
+            2) change_panel_domain; remnawave_menu ;;
+            3) check_logs_and_suggest_fix; remnawave_menu ;;
+            4) install_caddy_docker; remnawave_menu ;;
+            5) check_panel_status; remnawave_menu ;;
             6) echo "$(get_text RETURNING)"; sleep 1; start; ;; # <-- Изменено
         esac
     done
