@@ -63,23 +63,29 @@ function cleanup {
 trap cleanup SIGINT
 
 main() {
-    local choice_lang
+    # Define language options as an array
+    declare -a lang_options=(
+        "1) (EN) English"
+        "2) (RU) Русский"
+        "0) 🚪 Exit / Выход"
+    )
 
-    while true; do
-        clear
-        echo -e "${GREEN}Choose a language / Выберите язык: ${NC}"
-        echo -e "${ORANGE}1) (EN) English${NC}"
-        echo -e "${ORANGE}2) (RU) Русский${NC}"
-        echo -e "${ORANGE}0) 🚪 Exit / Выход${NC}"
-        echo ""
-        read -p "Enter your choice / Введите ваш выбор: " choice_lang
-        case "$choice_lang" in
-            1) LANG_CHOICE="en"; break ;;
-            2) LANG_CHOICE="ru"; break ;;
-            0) echo "$(get_text EXITING_SCRIPT)"; exit 0 ;;
-            *) echo "$(get_text INVALID_INPUT)"; sleep 2 ;;
-        esac
-    done
+    local choice_index
+
+    # Use select_menu for language selection
+    select_menu \
+        lang_options \
+        "$(get_text MENU_PROMPT)" \
+        choice_index \
+        "Choose a language / Выберите язык:" \
+        "Enter your choice / Введите ваш выбор:"
+
+    case "$choice_index" in
+        0) LANG_CHOICE="en";;
+        1) LANG_CHOICE="ru";;
+        2) echo "$(get_text EXITING_SCRIPT)"; exit 0;;
+        *) echo "$(get_text INVALID_INPUT)"; sleep 2; main; return ;; # Recursively call main on invalid input
+    esac
 
     # Check for .env file and load it
     if [ -f "$CONFIG_FILE" ]; then
@@ -87,7 +93,7 @@ main() {
     else
         echo -e "${ORANGE}$(get_text CONFIG_REQUIRED_INFO)${NC}"
         
-        # Новый вызов функции
+        # New function call
         yn_prompt "$(get_text CONFIG_SETUP_PROMPT)"
 
         if [ "$?" -eq 0 ]; then
