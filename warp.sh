@@ -209,7 +209,7 @@ check_warp_status() {
                 
                 if [[ -n "$country_info" && "$country_info" != "Undefined" ]]; then
                     echo -e "${GREEN}$(get_text COUNTRY): ${WHITE}$country_info${NC}"
-                    [[ -n "$city_info" ]] && echo -e "${GREEN}  • Город: ${WHITE}$city_info${NC}"
+                    [[ -n "$city_info" ]] && echo -e "${GREEN}$(get_text CITY): ${WHITE}$city_info${NC}"
                 else
                     echo -e "${YELLOW}$(get_text LOCATION): ${WHITE}$(get_text CLOUDFLARE_NETWORK)${NC}"
                 fi
