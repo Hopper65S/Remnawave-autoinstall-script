@@ -81,16 +81,18 @@ register_panel_user() {
     local json_data="{\"username\": \"$username\", \"password\": \"$password\"}"
     
     # 4. Отправляем API-запрос на регистрацию
-    local api_url="http://$domain/api/auth/register"
+    local api_url="https://$domain/api/auth/register"
     local response=$(make_api_request "POST" "$api_url" "$json_data")
 
     # 5. Проверяем ответ от сервера
     if echo "$response" | grep -q '"success":true'; then
         echo "🎉 УСПЕХ: Пользователь $username успешно зарегистрирован!"
         echo "✅ Ответ сервера: $response"
+        sleep 2
     else
         echo "❌ ОШИБКА: Не удалось зарегистрировать пользователя."
         echo "❗ Ответ сервера: $response"
+        sleep 2
         return 1
     fi
 
