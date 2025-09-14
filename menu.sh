@@ -352,6 +352,7 @@ warp_menu() {
             "$(get_text WARP_PROXY_MENU_INSTALL)"
             "$(get_text WARP_PROXY_MENU_UNINSTALL)"
             "$(get_text WARP_PROXY_MENU_STATUS)"
+            "$(get_text WARP_PROXY_MENU_DISABLE)"
             "$(get_text GO_BACK)"
         )
         local choice_index
@@ -366,7 +367,8 @@ warp_menu() {
             0) install_warp; break ;;
             1) uninstall_warp; break ;;
             2) check_warp_status; break ;;
-            3) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
+            4) disconnect_warp; break;;
+            5) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
         esac
     done
 }
