@@ -207,6 +207,12 @@ lang_ru=(
     ["WARP_INSTALL_FINAL_CHECK"]="🔍 Финальная проверка статуса WARP..."
     ["WARP_INSTALL_FINAL_SUCCESS"]="✅ WARP успешно подключен и активен."
     ["WARP_INSTALL_COMPLETE"]="✅ Установка WARP завершена успешно!"
+    ["WARP_DISCONNECT_HEADER"]="🔗 ОТКЛЮЧЕНИЕ WARP PROXY 🔗"
+    ["WARP_DISCONNECTING_MSG"]="🔗 Отключение от WARP..."
+    ["WARP_DISCONNECT_SUCCESS"]="✅ WARP успешно отключен."
+    ["WARP_DISCONNECT_ERROR"]="❌ Ошибка при отключении WARP."
+    ["WARP_ALREADY_DISCONNECTED"]="ℹ️ WARP уже отключен."
+    ["OPERATION_COMPLETE"]="Операция завершена."
     # === Очистка и удаление ===
     ["MENU_PROMPT_DELETE"]="Выберите, что хотите удалить:"
     ["CLEANUP_START"]="🗑️ Запуск процедуры очистки..."
@@ -832,6 +838,12 @@ lang_en=(
     ["WARP_INSTALL_FINAL_CHECK"]="🔍 Final check of WARP status..."
     ["WARP_INSTALL_FINAL_SUCCESS"]="✅ WARP is successfully connected and active."
     ["WARP_INSTALL_COMPLETE"]="✅ WARP installation completed successfully!"
+    ["WARP_DISCONNECT_HEADER"]="🔗 DISCONNECTING WARP PROXY 🔗"
+    ["WARP_DISCONNECTING_MSG"]="🔗 Disconnecting from WARP..."
+    ["WARP_DISCONNECT_SUCCESS"]="✅ WARP successfully disconnected."
+    ["WARP_DISCONNECT_ERROR"]="❌ Error disconnecting WARP."
+    ["WARP_ALREADY_DISCONNECTED"]="ℹ️ WARP is already disconnected."
+    ["OPERATION_COMPLETE"]="Operation complete."
     # === Cleanup and Deletion ===
     ["MENU_PROMPT_DELETE"]="Select what you want to delete:"
     ["CLEANUP_START"]="🗑️ Starting cleanup procedure..."
@@ -847,7 +859,6 @@ lang_en=(
     ["CLEANUP_IPTABLES"]="🗑️ Clearing iptables rules..."
     ["CLEANUP_IPTABLES_SUCCESS"]="✅ iptables rules successfully reset."
     ["CLEANUP_COMPLETE"]="✅ Cleanup complete. The system has been returned to its initial state."
-    # === Settings, Backup, and Other ===
     # === Backup Settings ===
     ["BACKUP_MENU_HEADER"]="💾 Backup settings"
     ["BACKUP_MENU_DB_AND_DIR"]="Database and Remnawave directory"

@@ -7,6 +7,7 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 WHITE='\033[1;37m'
 CYAN='\033[0;36m'
+YELLOW='\033[1;33m'
 # Initial system update and setup
 clear
 # apt install sudo &>/dev/null

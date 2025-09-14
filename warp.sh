@@ -265,3 +265,25 @@ uninstall_warp() {
     echo -e "${GREEN}$(get_text WARP_PROXY_UNINSTALL_COMPLETE)${NC}"
     sleep 3
 }
+disconnect_warp() {
+    echo "================================================"
+    echo -e "${CYAN} $(get_text WARP_DISCONNECT_HEADER) ${NC}"
+    echo "================================================"
+    sleep 1
+
+    if sudo warp-cli status 2>/dev/null | grep -q "Connected"; then
+        echo -e "${YELLOW}$(get_text WARP_DISCONNECTING_MSG)${NC}"
+        if sudo warp-cli disconnect &>/dev/null; then
+            echo -e "${GREEN}$(get_text WARP_DISCONNECT_SUCCESS)${NC}"
+        else
+            echo -e "${RED}$(get_text WARP_DISCONNECT_ERROR)${NC}"
+            return 1
+        fi
+    else
+        echo -e "${YELLOW}$(get_text WARP_ALREADY_DISCONNECTED)${NC}"
+    fi
+
+    echo -e "${GREEN}$(get_text OPERATION_COMPLETE)${NC}"
+    sleep 2
+    return 0
+}
