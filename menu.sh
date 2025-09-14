@@ -281,7 +281,7 @@ remnawave_menu() {
         
         case "$choice_index" in
             0) setup_remnawave; remnawave_menu ;;
-            1) register_panel_user; remnawave_menu ;;  # Вызов новой функции
+            1) get_panel_token; remnawave_menu ;;  # Вызов новой функции
             2) upload_db; remnawave_menu ;;
             3) change_panel_domain; remnawave_menu ;;
             4) check_logs_and_suggest_fix; remnawave_menu ;;
