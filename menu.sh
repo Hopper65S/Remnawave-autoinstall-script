@@ -63,18 +63,18 @@ select_menu() {
 start() {
     declare -a main_menu_options
     main_menu_options=(
-        "$(get_text MENU_NODE)"
-        "$(get_text MENU_PANEL)"
-        "$(get_text MENU_BACKUP)"
-        "$(get_text MENU_OTHER)"
-        "$(get_text MENU_WARP)"
-        "$(get_text MENU_VIEW_CONFIG)"
-        "$(get_text MENU_EDIT_CONFIG)"
-        "$(get_text MENU_DELETE)"
-        "$(get_text START_MENU_ABOUT)"
-        "---"  # Используем разделитель
-        "$(get_text SCRIPT_UPDATE)"
-        "$(get_text MENU_EXIT)"
+        "$(get_text MENU_NODE)"              # Индекс 0
+        "$(get_text MENU_PANEL)"             # Индекс 1
+        "$(get_text MENU_BACKUP)"            # Индекс 2
+        "$(get_text MENU_OTHER)"             # Индекс 3
+        "$(get_text MENU_WARP)"              # Индекс 4
+        "$(get_text MENU_VIEW_CONFIG)"       # Индекс 5
+        "$(get_text MENU_EDIT_CONFIG)"       # Индекс 6
+        "$(get_text MENU_DELETE)"            # Индекс 7
+        "$(get_text START_MENU_ABOUT)"       # Индекс 8
+        "---"                                # Индекс 9 (разделитель)
+        "$(get_text SCRIPT_UPDATE)"          # Индекс 10
+        "$(get_text MENU_EXIT)"              # Индекс 11
     )
     
     local choice_index
@@ -95,8 +95,12 @@ start() {
         6) edit_config_menu; sleep 1 ;;
         7) delete_menu; sleep 1 ;;
         8) about_script; sleep 1 ;;
-        9) update_script; sleep 1 ;; # Индексы изменились, разделитель не имеет индекса
-        10) echo "$(get_text EXITING_SCRIPT)"; exit 0 ;;
+        9) # Разделитель, который ничего не делает.
+           # `select_menu` уже сам обрабатывает это.
+           # Эта ветка кода по сути не нужна.
+           ;;
+        10) update_script; sleep 1 ;;
+        11) echo "$(get_text EXITING_SCRIPT)"; exit 0 ;;
     esac
 }
 setup_config() {
