@@ -14,9 +14,8 @@ select_menu() {
         echo ""
         
         for i in "${!menu_options[@]}"; do
-            # Проверяем, является ли элемент разделителем
             if [[ "${menu_options[$i]}" == "---" ]]; then
-                echo -e "${WHITE}-------------------------${NC}"
+                echo -e "${ORANGE}-------------------------${NC}"
             else
                 if [[ $i -eq $selected_index ]]; then
                     echo -e "${GREEN}● ${menu_options[$i]}${NC}"
@@ -38,14 +37,12 @@ select_menu() {
                 read -sn1 -r -t 0.001 key
                 case "$key" in
                     A)
-                        # Пропускаем разделитель при навигации вверх
                         ((selected_index = (selected_index - 1 + ${#menu_options[@]}) % ${#menu_options[@]}))
                         while [[ "${menu_options[$selected_index]}" == "---" ]]; do
                             ((selected_index = (selected_index - 1 + ${#menu_options[@]}) % ${#menu_options[@]}))
                         done
                         ;;
                     B)
-                        # Пропускаем разделитель при навигации вниз
                         ((selected_index = (selected_index + 1) % ${#menu_options[@]}))
                         while [[ "${menu_options[$selected_index]}" == "---" ]]; do
                             ((selected_index = (selected_index + 1) % ${#menu_options[@]}))
@@ -54,7 +51,6 @@ select_menu() {
                 esac
                 ;;
             "")
-                # При выборе Enter, если это разделитель, просто игнорируем
                 if [[ "${menu_options[$selected_index]}" == "---" ]]; then
                     continue
                 fi
