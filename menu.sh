@@ -1,10 +1,10 @@
 #!/bin/bash
 select_menu() {
     local -n menu_options=$1
-    local prompt="$2"
+    local prompt="$2"       # Этот параметр не используется в выводе.
     local -n result_var=$3
     local header="$4"
-    local prompt_text="$5"
+    local prompt_text="$5"  # Этот параметр отвечает за текст "Пожалуйста, выберите действие:"
 
     local selected_index=0
     
@@ -14,6 +14,7 @@ select_menu() {
         echo ""
         
         for i in "${!menu_options[@]}"; do
+            # Проверка и вывод разделителя
             if [[ "${menu_options[$i]}" == "---" ]]; then
                 echo -e "${ORANGE}-------------------------${NC}"
             else
@@ -29,6 +30,7 @@ select_menu() {
         echo -e "${ORANGE}$prompt_text${NC}"
         echo -e "${ORANGE}$(get_text MENU_PROMPT_SELECT)${NC}"
         
+        # Здесь мы читаем нажатие клавиши, а не ввод строки
         read -sn1 -r key
         
         case "$key" in
