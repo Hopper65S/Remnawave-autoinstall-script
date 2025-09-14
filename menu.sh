@@ -365,12 +365,12 @@ warp_menu() {
             "$(get_text WARP_PROXY_PROMPT)"
         
         case "$choice_index" in
-            0) install_warp; break ;;
-            1) uninstall_warp; break ;;
-            2) check_warp_status; break ;;
-            4) disconnect_warp; break;;
-            5) connect_warp; break;;
-            6) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
+            0) install_warp; warp_menu ;;
+            1) uninstall_warp; warp_menu ;;
+            2) check_warp_status; warp_menu ;;
+            3) disconnect_warp; warp_menu;;
+            4) connect_warp; warp_menu;;
+            5) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
         esac
     done
 }
