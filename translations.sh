@@ -57,6 +57,7 @@ lang_ru=(
     ["EXITING_SCRIPT"]="🚪 Выход..."
     ["FULL_INSTALL_COMPLETE"]="🎉 Полная установка завершена!"
     # === Настройка панели Remnawave ===
+    ["PANEL_MENU_REGISTER_USER"]="🔑 Зарегистрировать администратора"
     ["PANEL_MENU_PROMPT"]="Выберите действие для панели Remnawave:"
     ["PANEL_MENU_HEADER"]="💻 Настройка панели Remnawave"
     ["PANEL_MENU_FULL_INSTALL"]="⚙️ Полная установка панели Remnawave"
@@ -772,6 +773,7 @@ lang_en=(
     ["EXITING_SCRIPT"]="🚪 Exiting..."
     ["FULL_INSTALL_COMPLETE"]="🎉 Full installation complete!"
     # === Remnawave Panel Configuration ===
+    ["PANEL_MENU_REGISTER_USER"]="🔑 Register an admin user"
     ["PANEL_MENU_PROMPT"]="Select an action for the Remnawave panel:"
     ["PANEL_MENU_HEADER"]="💻 Remnawave Panel Setup"
     ["PANEL_MENU_FULL_INSTALL"]="⚙️ Full installation of the Remnawave panel"

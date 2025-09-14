@@ -263,6 +263,7 @@ remnawave_menu() {
         declare -a panel_menu_options
         panel_menu_options=(
             "$(get_text PANEL_MENU_FULL_INSTALL)"
+            "$(get_text PANEL_MENU_REGISTER_USER)"  # Новый пункт меню
             "$(get_text PANEL_MENU_UPLOAD_DB)"
             "$(get_text PANEL_MENU_CHANGE_DOMAIN)"
             "$(get_text PANEL_MENU_CHECK_ERRORS)"
@@ -280,12 +281,13 @@ remnawave_menu() {
         
         case "$choice_index" in
             0) setup_remnawave; remnawave_menu ;;
-            1) upload_db; remnawave_menu ;;
-            2) change_panel_domain; remnawave_menu ;;
-            3) check_logs_and_suggest_fix; remnawave_menu ;;
-            4) install_caddy_docker; remnawave_menu ;;
-            5) check_panel_status; remnawave_menu ;;
-            6) echo "$(get_text RETURNING)"; sleep 1; start; ;; # <-- Изменено
+            1) register_panel_user; remnawave_menu ;;  # Вызов новой функции
+            2) upload_db; remnawave_menu ;;
+            3) change_panel_domain; remnawave_menu ;;
+            4) check_logs_and_suggest_fix; remnawave_menu ;;
+            5) install_caddy_docker; remnawave_menu ;;
+            6) check_panel_status; remnawave_menu ;;
+            7) echo "$(get_text RETURNING)"; sleep 1; start; ;; # <-- Изменено
         esac
     done
 }

@@ -1,52 +1,94 @@
 #!/bin/bash
+generate_random_string() {
+    local length=$1
+    local chars=${2:-"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-="}
+    local random_string=""
 
+    if [ -z "$length" ]; then
+        echo "❌ Ошибка: Не указана длина строки."
+        return 1
+    fi
+
+    for ((i = 0; i < length; i++)); do
+        random_string+="${chars:RANDOM%${#chars}:1}"
+    done
+    echo "$random_string"
+}
 make_api_request() {
     local method=$1
     local url=$2
-    local token=$3
-    local data=$4
-
-    local headers=(
-        -H "Authorization: Bearer $token"
-        -H "Content-Type: application/json"
-    )
-
+    local data=$3
     local response
-    response=$(curl -X "$method" "$url" "${headers[@]}" -d "$data")
+
+    response=$(curl -s -X "$method" "$url" \
+               -H "Content-Type: application/json" \
+               -d "$data")
 
     echo "$response"
 }
 
+# Функция для получения токена из файла .env
 get_panel_token() {
-    local ENV_FILE=".env"
-    local TOKEN_VAR="REMNANAWAVE_API_TOKEN"
-    local token=""
+    local ENV_FILE="/opt/remnawave/.env"
+    local TOKEN_VAR="JWT_API_TOKENS_SECRET"
 
-    # 1. Проверяем, существует ли токен в .env
-    if [ -f "$ENV_FILE" ]; then
-        token=$(grep "^$TOKEN_VAR=" "$ENV_FILE" | cut -d'=' -f2-)
-        if [ -n "$token" ]; then
-            echo -e "${GREEN}$(get_text USING_SAVED_TOKEN)${NC}"
-            echo "$token"
-            return 0
-        fi
-    fi
-
-    # 2. Если токена нет, запрашиваем у пользователя
-    echo -e "${YELLOW}$(get_text ENTER_PANEL_TOKEN)${NC}"
-    read -p "Token: " user_token
-
-    if [ -z "$user_token" ]; then
-        echo -e "${RED}❌ $(get_text ERROR_MISSING_TOKEN)${NC}"
+    # 1. Проверяем, существует ли файл .env
+    if [ ! -f "$ENV_FILE" ]; then
+        echo "❌ ОШИБКА: Файл .env не найден по пути $ENV_FILE."
         return 1
     fi
-    
-    # 3. Добавляем токен в .env
-    echo -e "\n$TOKEN_VAR=$user_token" >> "$ENV_FILE"
-    echo -e "${GREEN}$(get_text TOKEN_RECEIVED_AND_SAVED)${NC}"
-    echo "$user_token"
-}
 
+    # 2. Ищем строку с токеном в файле и извлекаем его значение
+    local token=$(grep "^$TOKEN_VAR=" "$ENV_FILE" | cut -d'=' -f2-)
+    
+    # 3. Проверяем, удалось ли получить токен
+    if [ -z "$token" ]; then
+        echo "❌ ОШИБКА: Не удалось найти JWT_API_TOKENS_SECRET в файле .env."
+        return 1
+    fi
+
+    echo "✅ Токен успешно получен из файла .env."
+    echo "$token"
+}
+register_panel_user() {
+    clear
+    
+    # 1. Запрашиваем домен панели
+    read -p "Пожалуйста, введите домен вашей панели (например, panel.example.com): " domain
+    if [ -z "$domain" ]; then
+        echo "❌ ОШИБКА: Домен не может быть пустым."
+        return 1
+    fi
+
+    # 2. Запрашиваем учетные данные
+    read -p "Введите логин для администратора: " username
+    read -s -p "Введите пароль для администратора: " password
+    echo
+
+    if [ -z "$username" ] || [ -z "$password" ]; then
+        echo "❌ ОШИБКА: Логин или пароль не могут быть пустыми."
+        return 1
+    fi
+
+    # 3. Формируем JSON-тело запроса
+    local json_data="{\"username\": \"$username\", \"password\": \"$password\"}"
+    
+    # 4. Отправляем API-запрос на регистрацию
+    local api_url="http://$domain/api/auth/register"
+    local response=$(make_api_request "POST" "$api_url" "$json_data")
+
+    # 5. Проверяем ответ от сервера
+    if echo "$response" | grep -q '"success":true'; then
+        echo "🎉 УСПЕХ: Пользователь $username успешно зарегистрирован!"
+        echo "✅ Ответ сервера: $response"
+    else
+        echo "❌ ОШИБКА: Не удалось зарегистрировать пользователя."
+        echo "❗ Ответ сервера: $response"
+        return 1
+    fi
+
+    return 0
+}
 get_config_profiles() {
     local domain_url="$1"
     local token="$2"
