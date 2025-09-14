@@ -288,6 +288,7 @@ lang_ru=(
     ["WARP_ALREADY_DISCONNECTED"]="ℹ️ WARP уже отключен."
     ["OPERATION_COMPLETE"]="Операция завершена."
     # === Очистка и удаление ===
+    ["MENU_UNINSTALL_SCRIPT"]="🗑️ Удалить скрипт"
     ["SCRIPT_UNINSTALL_HEADER"]="УДАЛЕНИЕ СКРИПТА"
     ["SCRIPT_NOT_FOUND"]="❌ ОШИБКА: Папка скрипта не найдена."
     ["UNINSTALL_WARNING"]="⚠️ ВНИМАНИЕ: Это действие безвозвратно удалит все файлы скрипта из /opt/Remnawave-autoinstall-script."
@@ -1002,6 +1003,7 @@ lang_en=(
     ["WARP_ALREADY_DISCONNECTED"]="ℹ️ WARP is already disconnected."
     ["OPERATION_COMPLETE"]="Operation complete."
     # === Cleanup and Deletion ===
+    ["MENU_UNINSTALL_SCRIPT"]="🗑️ Uninstall script"
     ["SCRIPT_UNINSTALL_HEADER"]="SCRIPT UNINSTALLATION"
     ["SCRIPT_NOT_FOUND"]="❌ ERROR: The script folder was not found."
     ["UNINSTALL_WARNING"]="⚠️ WARNING: This action will permanently delete all script files from /opt/Remnawave-autoinstall-script."
