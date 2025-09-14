@@ -353,6 +353,7 @@ warp_menu() {
             "$(get_text WARP_PROXY_MENU_UNINSTALL)"
             "$(get_text WARP_PROXY_MENU_STATUS)"
             "$(get_text WARP_PROXY_MENU_DISABLE)"
+            "$(get_text WAPR_PROXY_MENU_ENABLE)"
             "$(get_text GO_BACK)"
         )
         local choice_index

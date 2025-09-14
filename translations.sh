@@ -188,6 +188,7 @@ lang_ru=(
     ["WARP_PROXY_MENU_UNINSTALL"]="🗑️ Удаление WARP"
     ["WARP_PROXY_MENU_STATUS"]="📋 Проверить статус WARP"
     ["WARP_PROXY_MENU_DISABLE"]="🛑 Отключить WARP"
+    ["WAPR_PROXY_MENU_ENABLE"]="🟢 Включить WARP"
     ["WARP_STATUS_HEADER"]="🛡️ Проверка статуса WARP"
     ["WARP_INSTALL_CONNECT_START"]="⏳ Попытка подключения к WARP. Это может занять несколько секунд..."
     ["WARP_PROXY_INSTALL_START"]="⚙️ Запуск установки WARP..."
@@ -208,7 +209,11 @@ lang_ru=(
     ["WARP_INSTALL_FINAL_CHECK"]="🔍 Финальная проверка статуса WARP..."
     ["WARP_INSTALL_FINAL_SUCCESS"]="✅ WARP успешно подключен и активен."
     ["WARP_INSTALL_COMPLETE"]="✅ Установка WARP завершена успешно!"
+    ["WARP_CONNECT_HEADER"]="🔗 ПОДКЛЮЧЕНИЕ К WARP PROXY 🔗"
+    ["WARP_CONNECTING_MSG"]="🔗 Подключение к WARP..."
     ["WARP_DISCONNECT_HEADER"]="🔗 ОТКЛЮЧЕНИЕ WARP PROXY 🔗"
+    ["WARP_CONNECT_ERROR"]="❌ Ошибка при подключении WARP."
+    ["WARP_ALREADY_CONNECTED"]="ℹ️ WARP уже подключен."
     ["WARP_DISCONNECTING_MSG"]="🔗 Отключение от WARP..."
     ["WARP_DISCONNECT_SUCCESS"]="✅ WARP успешно отключен."
     ["WARP_DISCONNECT_ERROR"]="❌ Ошибка при отключении WARP."
@@ -813,6 +818,10 @@ lang_en=(
     ["IPTABLES_SUCCESS"]="✅ iptables rules successfully applied."
     ["FIREWALL_SETUP_COMPLETE"]="✅ Firewall setup complete."
     ["OTHER_MENU_IPTABLES_SAVE"]="💾 Save Iptables rules"
+    ["WARP_CONNECT_HEADER"]="🔗 CONNECTING TO WARP PROXY 🔗"
+    ["WARP_CONNECTING_MSG"]="🔗 Connecting to WARP..."
+    ["WARP_CONNECT_ERROR"]="❌ Error connecting WARP."
+    ["WARP_ALREADY_CONNECTED"]="ℹ️ WARP is already connected."
     ["MENU_WARP"]="🛡️ WARP Proxy Settings"
     ["WARP_PROXY_PROMPT"]="What do you want to do with WARP?"
     ["WARP_PROXY_MENU_HEADER"]="🛡️ WARP Proxy Settings"
@@ -820,6 +829,7 @@ lang_en=(
     ["WARP_PROXY_MENU_UNINSTALL"]="🗑️ Uninstall WARP"
     ["WARP_PROXY_MENU_STATUS"]="📋 Check WARP status"
     ["WARP_PROXY_MENU_DISABLE"]="🛑 Disable WARP"
+    ["WAPR_PROXY_MENU_ENABLE"]="🟢 Enable WARP"
     ["WARP_STATUS_HEADER"]="🛡️ Checking WARP status"
     ["WARP_INSTALL_CONNECT_START"]="⏳ Attempting to connect to WARP. This may take a few seconds..."
     ["WARP_PROXY_INSTALL_START"]="⚙️ Starting WARP installation..."

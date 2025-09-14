@@ -287,3 +287,25 @@ disconnect_warp() {
     sleep 2
     return 0
 }
+connect_warp() {
+    echo "================================================"
+    echo -e "${CYAN} $(get_text WARP_CONNECT_HEADER) ${NC}"
+    echo "================================================"
+    sleep 1
+
+    if sudo warp-cli status 2>/dev/null | grep -q "Connected"; then
+        echo -e "${YELLOW}$(get_text WARP_ALREADY_CONNECTED)${NC}"
+    else
+        echo -e "${YELLOW}$(get_text WARP_CONNECTING_MSG)${NC}"
+        if sudo warp-cli connect &>/dev/null; then
+            echo -e "${GREEN}$(get_text WARP_INSTALL_FINAL_SUCCESS)${NC}"
+        else
+            echo -e "${RED}$(get_text WARP_CONNECT_ERROR)${NC}"
+            return 1
+        fi
+    fi
+
+    echo -e "${GREEN}$(get_text OPERATION_COMPLETE)${NC}"
+    sleep 2
+    return 0
+}
