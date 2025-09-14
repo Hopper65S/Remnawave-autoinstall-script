@@ -14,28 +14,8 @@ generate_random_string() {
     done
     echo "$random_string"
 }
-# Эта функция непосредственно выполняет API-запрос на регистрацию
-_make_registration_request() {
-    local domain="$1"
-    local username="$2"
-    local password="$3"
 
-    local api_url="https://$domain/api/auth/register"
-    local json_data="{\"username\": \"$username\", \"password\": \"$password\"}"
-
-    local response=$(curl -s -X POST "$api_url" \
-                     -H "Content-Type: application/json" \
-                     -d "$json_data")
-    
-    echo "$response"
-}
-
-# Эта функция запрашивает данные у пользователя и вызывает регистрацию
 register_panel_user_interactive() {
-    echo "================================================="
-    echo " 🔑 АВТОМАТИЧЕСКАЯ РЕГИСТРАЦИЯ АДМИНИСТРАТОРА"
-    echo "================================================="
-    
     # 1. Запрашиваем домен панели
     read -p "Пожалуйста, введите домен вашей панели (например, panel.example.com): " domain
     if [ -z "$domain" ]; then
@@ -89,100 +69,4 @@ register_panel_user_interactive() {
         sleep 5
         return 1
     fi
-}
-get_config_profiles() {
-    local domain_url="$1"
-    local token="$2"
-
-    local config_response=$(make_api_request "GET" "http://$domain_url/api/config-profiles" "$token")
-    if [ -z "$config_response" ] || ! echo "$config_response" | jq -e '.response.configProfiles' > /dev/null 2>&1; then
-        echo -e "${RED}❌ $(get_text ERROR_CONFIG_PROFILE_NOT_FOUND): ${config_response}${NC}"
-        return 1
-    fi
-
-    local profile_uuid=$(echo "$config_response" | jq -r '.response.configProfiles[] | select(.name == "Default-Profile") | .uuid' 2>/dev/null)
-    if [ -z "$profile_uuid" ]; then
-        echo -e "${YELLOW}❌ $(get_text ERROR_CONFIG_PROFILE_NOT_FOUND)${NC}"
-        return 1
-    fi
-
-    echo "$profile_uuid"
-    return 0
-}
-
-get_inbound_from_panel() {
-    local domain_url=$1
-    local token=$2
-
-    local inbounds_response=$(make_api_request "GET" "http://$domain_url/api/inbounds" "$token")
-    if [ -z "$inbounds_response" ] || ! echo "$inbounds_response" | jq -e '.response.inbounds' > /dev/null 2>&1; then
-        echo -e "${RED}❌ $(get_text ERROR_GET_INBOUNDS): $inbounds_response${NC}"
-        return 1
-    fi
-
-    local inbounds=$(echo "$inbounds_response" | jq -r '.response.inbounds[] | "\(.uuid) \(.name)"')
-    if [ -z "$inbounds" ]; then
-        echo -e "${RED}❌ $(get_text NO_INBOUNDS_FOUND)${NC}"
-        return 1
-    fi
-
-    local i=1
-    declare -A inbound_map
-    echo "$(get_text SELECT_INBOUND)"
-    while IFS= read -r line; do
-        local uuid=$(echo "$line" | awk '{print $1}')
-        local name=$(echo "$line" | cut -d' ' -f2-)
-        inbound_map["$i"]="$uuid"
-        echo -e "${ORANGE}$i) ${WHITE}$name${NC}"
-        ((i++))
-    done <<< "$inbounds"
-
-    echo ""
-    read -p "$(get_text ENTER_YOUR_CHOICE): " choice
-    local selected_uuid="${inbound_map[$choice]}"
-    
-    if [ -z "$selected_uuid" ]; then
-        return 1
-    fi
-
-    echo "$selected_uuid"
-}
-
-create_node() {
-    local domain_url=$1
-    local token=$2
-    local config_profile_uuid=$3
-    local inbound_uuid=$4
-    local node_address="${5:-$(curl -s -4 ifconfig.me || curl -s -4 api.ipify.org || curl -s -4 ipinfo.io/ip)}"
-    local node_name="${6:-Node-$(date +%s)}"
-
-    local node_data=$(cat <<EOF
-{
-    "name": "$node_name",
-    "address": "$node_address",
-    "port": 2222,
-    "configProfile": {
-        "activeConfigProfileUuid": "$config_profile_uuid",
-        "activeInbounds": ["$inbound_uuid"]
-    },
-    "isTrafficTrackingActive": false,
-    "trafficLimitBytes": 0,
-    "notifyPercent": 0,
-    "trafficResetDay": 31,
-    "excludedInbounds": [],
-    "countryCode": "XX",
-    "consumptionMultiplier": 1.0
-}
-EOF
-)
-
-    local node_response=$(make_api_request "POST" "http://$domain_url/api/nodes" "$token" "$node_data")
-
-    if [ -z "$node_response" ] || ! echo "$node_response" | jq -e '.response.uuid' > /dev/null 2>&1; then
-        echo -e "${RED}$(get_text ERROR_CREATE_NODE): ${node_response}${NC}"
-        return 1
-    fi
-
-    echo -e "${GREEN}$(get_text NODE_CREATED)${NC}\n"
-    return 0
 }
