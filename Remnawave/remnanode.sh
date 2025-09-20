@@ -107,16 +107,28 @@ setup_remnanode() {
         return 1
     fi
     
+    # --- УЛУЧШЕННАЯ ЛОГИКА С ПРОВЕРКОЙ ПЕРЕМЕННОЙ SSL_CERT_KEY ---
+
+    # Проверяем, существует ли переменная SSL_CERT_KEY в текущей сессии
+    if [ -z "$SSL_CERT_KEY" ]; then
+        # Если переменной нет, пытаемся прочитать ее напрямую из .env файла
+        local config_file="/opt/Remnawave-autoinstall-script/.env"
+        if [ -f "$config_file" ] && grep -q "SSL_CERT_KEY" "$config_file"; then
+            SSL_CERT_KEY=$(grep "SSL_CERT_KEY" "$config_file" | cut -d'=' -f2 | tr -d '"')
+        else
+            SSL_CERT_KEY=""
+        fi
+    fi
+
     echo "$(get_text CREATE_ENV_FILE)"
-    sudo tee .env > /dev/null <<EOF
-APP_PORT=2222
-SSL_CERT=$SSL_CERT_KEY
-EOF
+    # Используем printf для надежной записи
+    printf "APP_PORT=2222\nSSL_CERT=%s\n" "$SSL_CERT_KEY" | sudo tee .env > /dev/null
     echo "$(get_text SUCCESS_ENV_FILE)"
     
     echo "$(get_text CHECK_DOCKER_COMPOSE)"
     if [ ! -f docker-compose.yml ]; then
-        sudo tee docker-compose.yml > /dev/null 
+        # --- ИСПРАВЛЕННЫЙ СИНТАКСИС HERE-DOCUMENT ---
+        sudo tee docker-compose.yml > /dev/null <<EOF
 services:
   remnanode:
     container_name: remnanode
@@ -126,7 +138,7 @@ services:
     network_mode: "host"
     env_file:
       - .env
-
+EOF
         echo "$(get_text CREATE_DOCKER_COMPOSE)"
     else
         echo "$(get_text DOCKER_COMPOSE_EXISTS)"
