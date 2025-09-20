@@ -215,9 +215,7 @@ services:
     image: caddy:latest
     container_name: remnanode-caddy
     restart: always
-    ports:
-      - "80:80"
-      - "8443:8443"
+    network_mode: "host"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
       - ./www:/var/www/html
@@ -266,7 +264,8 @@ COMPOSE_EOF
     
     sleep 1
     echo -e "\n${GREEN}$(get_text CADDY_INSTALL_COMPLETE)${NC}"
-    sleep 2
+    sleep 4
+    start
 }
 
     
