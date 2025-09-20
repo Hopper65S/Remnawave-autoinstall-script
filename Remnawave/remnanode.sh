@@ -155,30 +155,26 @@ install_caddy_for_remnanode() {
         return 1
     fi
     
+    # --- УПРОЩЕННАЯ И ИСПРАВЛЕННАЯ ЛОГИКА ---
+    
     local CADDY_DIR="/opt/remnanode_caddy"
     
+    # Шаг 1: Принудительно останавливаем и удаляем старый контейнер, если он существует. БЕЗ ВОПРОСОВ.
     if sudo docker ps -a --format '{{.Names}}' | grep -q "^remnanode-caddy$"; then
-        echo "$(get_text CADDY_CONTAINER_EXISTS)"
-        if yn_prompt "$(get_text CADDY_CONTAINER_DELETE_PROMPT)"; then
-            echo "$(get_text CADDY_CONTAINER_DELETING)"
-            (cd "$CADDY_DIR" && sudo docker compose down -v &>/dev/null)
-            sudo docker rm -f remnanode-caddy &>/dev/null
-            echo "$(get_text CADDY_CONTAINER_DELETED)"
-        else
-            echo "$(get_text CADDY_CONTAINER_KEEP)"
-            return 1
-        fi
+        echo "$(get_text CADDY_CONTAINER_DELETING)"
+        sudo docker rm -f remnanode-caddy &>/dev/null
+        echo "$(get_text CADDY_CONTAINER_DELETED)"
     fi
 
+    # Шаг 2: Создаем директории
     echo "$(get_text CREATE_CADDY_DIRS)"
     sudo mkdir -p "$CADDY_DIR/www"
     
-    # --- ИЗМЕНЕНИЕ: Caddyfile теперь проксирует на localhost ---
+    # Шаг 3: Создаем Caddyfile. Проксируем на IP хоста, так как remnanode в режиме host.
     echo "$(get_text CREATE_CADDYFILE)"
     local CADDYFILE_CONTENT
     CADDYFILE_CONTENT=$(cat <<-EOF
 		$CADDY_DOMAIN:8443 {
-		    reverse_proxy remnanode:2222
 		    root * /var/www/html
 		    file_server {
 		        index index.html
@@ -189,15 +185,17 @@ install_caddy_for_remnanode() {
     echo "$CADDYFILE_CONTENT" | sudo tee "$CADDY_DIR/Caddyfile" > /dev/null
     echo "$(get_text SUCCESS_CADDYFILE)"
 
-    echo "$(get_text CADDY_CONFIGURING_FOR_CERT)"
-    local COMPOSE_CONTENT_V1
-    COMPOSE_CONTENT_V1=$(cat <<-EOF
+    # Шаг 4: Создаем docker-compose.yml СРАЗУ с нужными портами
+    local COMPOSE_CONTENT
+    COMPOSE_CONTENT=$(cat <<-EOF
 		services:
 		  caddy:
 		    image: caddy:latest
 		    container_name: remnanode-caddy
 		    restart: always
-		    network_mode: "host"
+		    ports:
+		      - "80:80"
+		      - "8443:8443"
 		    volumes:
 		      - ./Caddyfile:/etc/caddy/Caddyfile
 		      - ./www:/var/www/html
@@ -206,10 +204,11 @@ install_caddy_for_remnanode() {
 		  caddy_data:
 	EOF
     )
-    echo "$COMPOSE_CONTENT_V1" | sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null
+    echo "$COMPOSE_CONTENT" | sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null
     sleep 1
 
-    # 2. Запускаем Caddy с этой конфигурацией
+    # Шаг 5: Запускаем Caddy
+    echo "$(get_text START_CADDY_CONTAINER)"
     cd "$CADDY_DIR"
     sudo docker compose up -d
     if [ $? -ne 0 ]; then
@@ -217,7 +216,7 @@ install_caddy_for_remnanode() {
         return 1
     fi
 
-    # 3. Ждем, пока Caddy получит сертификат
+    # Шаг 6: Ждем получения сертификата
     echo "$(get_text "CADDY_WAITING_FOR_CERT")"
     local cert_obtained=false
     for i in {1..18}; do
@@ -231,7 +230,7 @@ install_caddy_for_remnanode() {
         sleep 5
     done
     
-    # 4. Проверяем результат
+    # Шаг 7: Проверяем результат
     if [ "$cert_obtained" = true ]; then
         echo -e "${GREEN}$(get_text "CADDY_CERT_SUCCESS")${NC}"
     else
@@ -240,11 +239,6 @@ install_caddy_for_remnanode() {
         (cd "$CADDY_DIR" && sudo docker compose down -v)
         return 1
     fi
-
-    echo "$(get_text "CADDY_RECONFIGURING_SECURE")"
-    sudo docker compose down
-    sudo docker compose up -d
-    echo -e "${GREEN}$(get_text "CADDY_RECONFIGURED_SUCCESS")${NC}"
 
     # Конфигурация заглушки...
     echo -e "\n--- $(get_text WEBPAGE_SETUP_HEADER) ---"
