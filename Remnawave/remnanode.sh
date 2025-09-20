@@ -302,42 +302,51 @@ EOF
 
 setup_firewall() {
     echo "$(get_text FIREWALL_SETUP_START)"
-    sleep 0.5
+    sleep 1
 
     # Проверка, установлен ли iptables
     if ! command -v iptables &> /dev/null; then
         echo "$(get_text IPTABLES_NOT_FOUND)"
-        sleep 3
-        apt-get update
-        apt-get install -y iptables
-        echo "$(get_text IPTABLES_INSTALL_SUCCESS)"
         sleep 2
+        sudo apt-get update
+        sudo apt-get install -y iptables
+        echo "$(get_text IPTABLES_INSTALL_SUCCESS)"
+        sleep 1
     else
         echo "$(get_text IPTABLES_ALREADY_INSTALLED)"
         sleep 1
     fi
 
-    # Основная логика настройки iptables
     echo "$(get_text APPLYING_IPTABLES)"
-    sleep 4
-    iptables -F
-    iptables -P INPUT DROP
-    iptables -P FORWARD DROP
-    iptables -P OUTPUT ACCEPT
+    sleep 2
 
-    iptables -A INPUT -i lo -j ACCEPT
-    iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+    sudo iptables -F INPUT
 
-    # Разрешённые порты
-    iptables -A INPUT -p tcp --dport $SSH_PORT -j ACCEPT
-    iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-    iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-    iptables -A INPUT -p tcp -s $IP_PANEL --dport 2222 -j ACCEPT
+
+    sudo iptables -P INPUT DROP
     
+
+    # Разрешаем весь трафик на loopback-интерфейсе
+    sudo iptables -A INPUT -i lo -j ACCEPT
+
+    # Разрешаем уже установленные и связанные с ними соединения.
+    sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+    echo "-> $(get_text "FIREWALL_ALLOWING_SSH") $SSH_PORT"
+    sudo iptables -A INPUT -p tcp --dport "$SSH_PORT" -j ACCEPT
+
+    echo "-> $(get_text "FIREWALL_ALLOWING_WEB")"
+    sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+    sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+
+    echo "-> $(get_text "FIREWALL_ALLOWING_NODE") $IP_PANEL"
+    sudo iptables -A INPUT -p tcp -s "$IP_PANEL" --dport 2222 -j ACCEPT
+
+    echo ""
     echo "$(get_text IPTABLES_SUCCESS)"
-    sleep 0.5
+    sleep 1
     echo "$(get_text FIREWALL_SETUP_COMPLETE)"
-    sleep 0.5
+    sleep 1
 }
 select_vpn_method() {
     clear

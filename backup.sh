@@ -1,18 +1,41 @@
 #!/bin/bash
+disable_telegram_backup() {
+    local BACKUP_SCRIPT_PATH="/usr/local/bin/remnawave_backup.sh"
+    
+    clear
+    echo "$(get_text "DISABLE_BACKUP_HEADER")"
+    echo "---"
 
+    if yn_prompt "$(get_text "CONFIRM_DISABLE_BACKUP")"; then
+        # Проверяем, существует ли задача в crontab
+        if sudo crontab -l 2>/dev/null | grep -q "$BACKUP_SCRIPT_PATH"; then
+            # Удаляем задачу, оставляя все остальные
+            (sudo crontab -l 2>/dev/null | grep -v "$BACKUP_SCRIPT_PATH") | sudo crontab -
+            echo -e "\n${GREEN}$(get_text "CRON_JOB_REMOVED")${NC}"
+        else
+            echo -e "\n${YELLOW}$(get_text "CRON_JOB_NOT_FOUND")${NC}"
+        fi
+    else
+        echo -e "\n${YELLOW}$(get_text "OPERATION_CANCELLED")${NC}"
+    fi
+
+    echo ""
+    read -p "$(get_text "PRESS_ENTER_TO_RETURN")"
+    start
+}
 run_backup_logic() {
     local backup_type="$1"
     local TELEGRAM_TOKEN=""
     local CHAT_ID=""
     local setup_cron="false"
 
-    local SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    local SCRIPT_DIR="/opt/Remnawave-autoinstall-script" # Указываем абсолютный путь
     local TELEGRAM_ENV_FILE="$SCRIPT_DIR/.env"
     local DB_ENV_FILE="/opt/remnawave/.env"
 
     if [ -f "$TELEGRAM_ENV_FILE" ]; then
-        TELEGRAM_TOKEN=$(grep -E '^TELEGRAM_TOKEN=' "$TELEGRAM_ENV_FILE" | cut -d'=' -f2-)
-        CHAT_ID=$(grep -E '^CHAT_ID=' "$TELEGRAM_ENV_FILE" | cut -d'=' -f2-)
+        TELEGRAM_TOKEN=$(grep -E '^TELEGRAM_TOKEN=' "$TELEGRAM_ENV_FILE" | cut -d'=' -f2- | tr -d '"')
+        CHAT_ID=$(grep -E '^CHAT_ID=' "$TELEGRAM_ENV_FILE" | cut -d'=' -f2- | tr -d '"')
     fi
 
     if yn_prompt "$(get_text "PROMPT_SCHEDULE_BACKUP")"; then
@@ -39,8 +62,11 @@ run_backup_logic() {
 
                 if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$CHAT_ID" ]; then
                     echo "$(get_text "SAVING_NEW_SETTINGS")"
-                    sudo tee -a "$TELEGRAM_ENV_FILE" > /dev/null <<< "TELEGRAM_TOKEN=\"$TELEGRAM_TOKEN\"
-CHAT_ID=\"$CHAT_ID\""
+                    # Перезаписываем или добавляем переменные
+                    grep -v -E '^TELEGRAM_TOKEN=|^CHAT_ID=' "$TELEGRAM_ENV_FILE" > "${TELEGRAM_ENV_FILE}.tmp" 2>/dev/null
+                    mv "${TELEGRAM_ENV_FILE}.tmp" "$TELEGRAM_ENV_FILE"
+                    echo "TELEGRAM_TOKEN=\"$TELEGRAM_TOKEN\"" >> "$TELEGRAM_ENV_FILE"
+                    echo "CHAT_ID=\"$CHAT_ID\"" >> "$TELEGRAM_ENV_FILE"
                     echo "$(get_text "CONFIG_SAVED_SUCCESS")$TELEGRAM_ENV_FILE."
                 fi
             fi
@@ -55,14 +81,13 @@ CHAT_ID=\"$CHAT_ID\""
 
     if [ -f "$DB_ENV_FILE" ]; then
         echo "$(get_text "DB_CONFIG_FOUND")"
-        local DB_URL=$(grep 'DATABASE_URL' "$DB_ENV_FILE" | cut -d'=' -f2- | sed 's/"//g')
+        local DB_URL=$(grep 'DATABASE_URL' "$DB_ENV_FILE" | cut -d'=' -f2- | tr -d '"')
         if [[ -n "$DB_URL" ]]; then
             DB_USER=$(echo "$DB_URL" | sed -E 's/postgresql:\/\/([^:]+):.*@.*/\1/')
             DB_PASS=$(echo "$DB_URL" | sed -E 's/postgresql:\/\/[^:]+:([^@]+)@.*/\1/')
             DB_HOST=$(echo "$DB_URL" | sed -E 's/postgresql:\/\/[^@]+@([^:]+):.*/\1/')
             DB_NAME=$(echo "$DB_URL" | sed -E 's/.*\/([^?]+).*/\1/')
             echo "$(get_text "DB_INFO_EXTRACTED")"
-            sleep 2
         else
             echo "$(get_text "DB_URL_NOT_FOUND")"
         fi
@@ -78,162 +103,141 @@ CHAT_ID=\"$CHAT_ID\""
 
     local BACKUP_SCRIPT_PATH="/usr/local/bin/remnawave_backup.sh"
 
-    # Предварительно получаем все строки из словаря, включая эмодзи
-    local text_backup_files_note="$(get_text "BACKUP_FILES_NOTE")"
+    # --- УЛУЧШЕННАЯ ГЕНЕРАЦИЯ СКРИПТА С ПОМОЩЬЮ HERE DOCUMENT ---
+    echo "$(get_text "GENERATING_BACKUP_SCRIPT")"
+
+    # Предварительно получаем все строки из словаря
     local text_telegram_caption="$(get_text "TELEGRAM_CAPTION")"
-    local text_cleaning_progress="$(get_text "CLEANING_PROGRESS")"
-    local text_backups_over_limit="$(get_text "BACKUPS_OVER_LIMIT")"
-    local text_no_cleanup_needed="$(get_text "NO_CLEANUP_NEEDED")"
-    local text_backup_start="$(get_text "BACKUP_START")"
-    local text_creating_temp_dir="$(get_text "CREATING_TEMP_DIR")"
-    local text_creating_db_dump="$(get_text "CREATING_DB_DUMP")"
+    local text_sending_to_telegram="$(get_text "SENDING_TO_TELEGRAM")"
     local text_db_dump_error="$(get_text "DB_DUMP_ERROR")"
-    local text_db_dump_success="$(get_text "DB_DUMP_SUCCESS")"
-    local text_copying_remnawave_dir="$(get_text "COPYING_REMAWAVE_DIR")"
-    local text_copying_all_opt="$(get_text "COPYING_ALL_OPT")"
-    local text_db_only_backup_selected="$(get_text "DB_ONLY_BACKUP_SELECTED")"
-    local text_creating_single_archive="$(get_text "CREATING_SINGLE_ARCHIVE")"
-    local text_archive_error="$(get_text "ARCHIVE_ERROR")"
-    local text_archive_success="$(get_text "ARCHIVE_SUCCESS")"
-    local text_deleting_temp_dir="$(get_text "DELETING_TEMP_DIR")"
+    
+    # Создаем скрипт с помощью here-document. Это гораздо чище и надежнее.
+    sudo tee "$BACKUP_SCRIPT_PATH" > /dev/null <<EOF
+#!/bin/bash
+# Auto-generated by Remnawave-autoinstall-script
 
-    sudo rm -f "$BACKUP_SCRIPT_PATH"
-    sudo touch "$BACKUP_SCRIPT_PATH"
+# --- CONFIGURATION ---
+BACKUP_DIR="/opt/backups"
+MAX_BACKUPS=50
+TELEGRAM_TOKEN="$TELEGRAM_TOKEN"
+CHAT_ID="$CHAT_ID"
+DB_USER="$DB_USER"
+DB_PASS="$DB_PASS"
+DB_HOST="$DB_HOST"
+DB_NAME="$DB_NAME"
+BACKUP_TYPE="$backup_type"
 
-    sudo bash -c "
-        printf '#!/bin/bash\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '# %s\n' \"$text_backup_files_note\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'BACKUP_DIR=\"/opt/backups\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'MAX_BACKUPS=50\n\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'TELEGRAM_TOKEN=\"%s\"\n' \"$TELEGRAM_TOKEN\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'CHAT_ID=\"%s\"\n' \"$CHAT_ID\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'DB_USER=\"%s\"\n' \"$DB_USER\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'DB_PASS=\"%s\"\n' \"$DB_PASS\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'DB_HOST=\"%s\"\n' \"$DB_HOST\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'DB_NAME=\"%s\"\n' \"$DB_NAME\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'BACKUP_TYPE=\"%s\"\n\n' \"$backup_type\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'send_telegram_file() {\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    local file_path=\"\$1\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    local caption=\"%s\$(basename \"\$file_path\")\"\n' \"$text_telegram_caption\" >> '$BACKUP_SCRIPT_PATH'
-        printf '    if [ -n \"\$TELEGRAM_TOKEN\" ] && [ -n \"\$CHAT_ID\" ]; then\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        echo \"Отправка файла в Telegram...\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        curl -s -X POST \"https://api.telegram.org/bot\$TELEGRAM_TOKEN/sendDocument\" \\\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '            -F document=@\"\$file_path\" \\\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '            -F chat_id=\"\$CHAT_ID\" \\\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '            -F caption=\"\$caption\" > /dev/null\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    fi\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '}\n\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'send_telegram_message() {\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    local message=\"\$1\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    if [ -n \"\$TELEGRAM_TOKEN\" ] && [ -n \"\$CHAT_ID\" ]; then\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        curl -s -X POST \"https://api.telegram.org/bot\$TELEGRAM_TOKEN/sendMessage\" \\\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '            -d chat_id=\"\$CHAT_ID\" \\\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '            --data-urlencode \"text=\$message\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    fi\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '}\n\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'clean_old_backups() {\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    echo \"%s\"\n' \"$text_cleaning_progress\" >> '$BACKUP_SCRIPT_PATH'
-        printf '    mkdir -p \"\$BACKUP_DIR\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    local backup_count=\$(ls -1 \"\$BACKUP_DIR\" 2>/dev/null | wc -l)\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    if (( backup_count > MAX_BACKUPS )); then\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        local backups_to_remove=\$(( backup_count - MAX_BACKUPS ))\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        printf \"%s\" \"$text_backups_over_limit\" \"\$MAX_BACKUPS\" \"\$backups_to_remove\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        ls -1t \"\$BACKUP_DIR\" | tail -n \"\$backups_to_remove\" | xargs -I {} rm -- \"\$BACKUP_DIR/{}\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    else\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        echo \"%s\"\n' \"$text_no_cleanup_needed\" >> '$BACKUP_SCRIPT_PATH'
-        printf '    fi\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '}\n\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'echo \"%s\"\n' \"$text_backup_start\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'mkdir -p \"\$BACKUP_DIR\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'TIMESTAMP=\$(date +\"%%Y-%%m-%%d_%%H-%%M-%%S\")\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'FINAL_ARCHIVE_FILE=\"\$BACKUP_DIR/remnawave_backup_\$TIMESTAMP.tar.gz\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'TEMP_DIR=\"/tmp/remnawave_backup_\$TIMESTAMP\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'DB_BACKUP_FILE=\"\$TEMP_DIR/remnawave_db.sql\"\n\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'echo \"%s\"\n' \"$text_creating_temp_dir\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'mkdir -p \"\$TEMP_DIR\"\n\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '# 1. Создаем дамп базы данных\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'echo \"%s\"\n' \"$text_creating_db_dump\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'if ! PGPASSWORD=\"\$DB_PASS\" docker exec -i \"\$DB_HOST\" pg_dump -U \"\$DB_USER\" -d \"\$DB_NAME\" > \"\$DB_BACKUP_FILE\"; then\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    echo \"%s\" \"\$DB_HOST\".\n' \"$text_db_dump_error\" >> '$BACKUP_SCRIPT_PATH'
-        printf '    rm -rf \"\$TEMP_DIR\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    exit 1\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'fi\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'echo \"%s\"\n' \"$text_db_dump_success\" >> '$BACKUP_SCRIPT_PATH'
-        printf '\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '# 2. Копируем файлы в зависимости от типа бэкапа\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'case \"\$BACKUP_TYPE\" in\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    \"db_and_remnawave\")\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        echo \"%s\"\n' \"$text_copying_remnawave_dir\" >> '$BACKUP_SCRIPT_PATH'
-        printf '        cp -a /opt/remnawave \"\$TEMP_DIR/\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        ;;\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    \"all_opt\")\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        echo \"%s\"\n' \"$text_copying_all_opt\" >> '$BACKUP_SCRIPT_PATH'
-        printf '        for dir in /opt/*; do\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '            if [ \"\$dir\" != \"\$BACKUP_DIR\" ]; then\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '                cp -a \"\$dir\" \"\$TEMP_DIR/\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '            fi\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        done\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        ;;\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    \"db_only\")\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '        echo \"%s\"\n' \"$text_db_only_backup_selected\" >> '$BACKUP_SCRIPT_PATH'
-        printf '        ;;\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'esac\n\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '# 3. Архивируем все содержимое временной директории\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'echo \"%s\"\n' \"$text_creating_single_archive\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'if ! tar -czf \"\$FINAL_ARCHIVE_FILE\" -C \"\$TEMP_DIR\" .; then\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    echo \"%s\"\n' \"$text_archive_error\" >> '$BACKUP_SCRIPT_PATH'
-        printf '    rm -rf \"\$TEMP_DIR\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '    exit 1\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'fi\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'echo \"%s\$FINAL_ARCHIVE_FILE\"\n' \"$text_archive_success\" >> '$BACKUP_SCRIPT_PATH'
-        printf '\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '# 4. Отправка единого архива в Telegram\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'send_telegram_file \"\$FINAL_ARCHIVE_FILE\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'MESSAGE_TO_SEND=\"📅 Дата: \$(date +\"%%Y-%%m-%%d %%H:%%M:%%S\")\\n✅ Бэкап успешно создан\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'send_telegram_message \"\$MESSAGE_TO_SEND\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '# 5. Очищаем старые бэкапы\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'clean_old_backups\n\n' >> '$BACKUP_SCRIPT_PATH'
-        printf '# 6. Удаляем временную директорию\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'echo \"%s\"\n' \"$text_deleting_temp_dir\" >> '$BACKUP_SCRIPT_PATH'
-        printf 'rm -rf \"\$TEMP_DIR\"\n' >> '$BACKUP_SCRIPT_PATH'
-        printf 'echo \"Завершено\"\n' >> '$BACKUP_SCRIPT_PATH'
-    "
+# --- FUNCTIONS ---
+send_telegram_file() {
+    local file_path="\$1"
+    local caption_text="$text_telegram_caption"
+    local caption="\${caption_text}\$(basename "\$file_path")"
+    if [ -n "\$TELEGRAM_TOKEN" ] && [ -n "\$CHAT_ID" ]; then
+        echo "$text_sending_to_telegram"
+        curl -s -X POST "https://api.telegram.org/bot\${TELEGRAM_TOKEN}/sendDocument" \\
+            -F document=@"\$file_path" \\
+            -F chat_id="\$CHAT_ID" \\
+            -F caption="\$caption" > /dev/null
+    fi
+}
+
+clean_old_backups() {
+    mkdir -p "\$BACKUP_DIR"
+    while [ \$(ls -1 "\$BACKUP_DIR" | wc -l) -gt \$MAX_BACKUPS ]; do
+        oldest_backup=\$(ls -1t "\$BACKUP_DIR" | tail -n 1)
+        rm -- "\$BACKUP_DIR/\$oldest_backup"
+    done
+}
+
+# --- MAIN LOGIC ---
+echo "Backup started: \$(date)"
+mkdir -p "\$BACKUP_DIR"
+TIMESTAMP=\$(date +"%Y-%m-%d_%H-%M-%S")
+TEMP_DIR="/tmp/remnawave_backup_\$TIMESTAMP"
+mkdir -p "\$TEMP_DIR"
+
+# 1. Create database dump
+DB_BACKUP_FILE="\$TEMP_DIR/remnawave_db.sql"
+if ! PGPASSWORD="\$DB_PASS" docker exec "\$DB_HOST" pg_dump -U "\$DB_USER" -d "\$DB_NAME" > "\$DB_BACKUP_FILE"; then
+    echo "$text_db_dump_error"
+    rm -rf "\$TEMP_DIR"
+    exit 1
+fi
+
+# 2. Copy files based on backup type
+case "\$BACKUP_TYPE" in
+    "db_and_remnawave")
+        cp -a /opt/remnawave "\$TEMP_DIR/remnawave"
+        ;;
+    "all_opt")
+        mkdir "\$TEMP_DIR/opt"
+        for dir in /opt/*; do
+            if [ "\$dir" != "\$BACKUP_DIR" ]; then
+                cp -a "\$dir" "\$TEMP_DIR/opt/"
+            fi
+        done
+        ;;
+esac
+
+# 3. Archive everything from the temporary directory
+FINAL_ARCHIVE_FILE="\$BACKUP_DIR/Remnawave-backup-\$TIMESTAMP.tar.gz"
+tar -czf "\$FINAL_ARCHIVE_FILE" -C "\$TEMP_DIR" .
+
+# 4. Send to Telegram and clean up
+send_telegram_file "\$FINAL_ARCHIVE_FILE"
+rm -rf "\$TEMP_DIR"
+clean_old_backups
+
+echo "Backup finished successfully: \$FINAL_ARCHIVE_FILE"
+EOF
     
     sudo chmod +x "$BACKUP_SCRIPT_PATH"
-    echo "$(get_text "SCRIPT_SAVED")$BACKUP_SCRIPT_PATH"
+    echo "$(get_text "BACKUP_SCRIPT_CREATED") $BACKUP_SCRIPT_PATH"
+    sleep 2
 
     echo "$(get_text "RUNNING_ONE_TIME_BACKUP")"
     sudo bash "$BACKUP_SCRIPT_PATH"
 
     if [ "$setup_cron" == "true" ]; then
         echo ""
-        echo "$(get_text "CRON_SETUP_HEADER")"
-        echo "$(get_text "CRON_SCHEDULE_PROMPT")"
+        local choice_index
+        declare -a cron_options=(
+            "$(get_text "CRON_DAILY")"
+            "$(get_text "CRON_TWICE_DAILY")"
+            "$(get_text "CRON_WEEKLY")"
+            "$(get_text "CRON_CUSTOM")"
+        )
         
-        echo "1) $(get_text "CRON_DAILY")"
-        echo "2) $(get_text "CRON_TWICE_DAILY")"
-        echo "3) $(get_text "CRON_WEEKLY")"
-        echo "4) $(get_text "CRON_CUSTOM")"
-        
-        read -p "$(get_text "CRON_CHOICE_PROMPT")" choice_cron
+        select_menu \
+            cron_options \
+            "" \
+            choice_index \
+            "$(get_text "CRON_SETUP_HEADER")" \
+            "$(get_text "CRON_SCHEDULE_PROMPT")"
 
         local CRON_SCHEDULE=""
-        case "$choice_cron" in
-            1) CRON_SCHEDULE="0 3 * * *" ;;
-            2) CRON_SCHEDULE="0 3,15 * * *" ;;
-            3) CRON_SCHEDULE="0 3 * * 0" ;;
-            4) read -p "$(get_text "CRON_CUSTOM")" CRON_SCHEDULE ;;
-            *) echo "$(get_text "CRON_INVALID_CHOICE")"; CRON_SCHEDULE="0 3 * * *" ;;
+        case "$choice_index" in
+            0) CRON_SCHEDULE="0 3 * * *" ;;
+            1) CRON_SCHEDULE="0 3,15 * * *" ;;
+            2) CRON_SCHEDULE="0 3 * * 0" ;;
+            3) 
+               echo ""
+               echo "$(get_text "CRON_CUSTOM_HINT")"
+               read -p "$(get_text "ENTER_CUSTOM_CRON")" CRON_SCHEDULE 
+               ;;
+            *) 
+               echo "$(get_text "CRON_INVALID_CHOICE")"; CRON_SCHEDULE="0 3 * * *" 
+               ;;
         esac
 
-        (crontab -l 2>/dev/null | grep -v "$BACKUP_SCRIPT_PATH"; echo "$CRON_SCHEDULE $BACKUP_SCRIPT_PATH > /dev/null 2>&1") | sudo crontab -
-        echo "$(get_text "CRON_SCHEDULE_SAVED")'$CRON_SCHEDULE'."
+        # Удаляем старую задачу (если есть) и добавляем новую
+        (sudo crontab -l 2>/dev/null | grep -v "$BACKUP_SCRIPT_PATH"; echo "$CRON_SCHEDULE $BACKUP_SCRIPT_PATH > /dev/null 2>&1") | sudo crontab -
+        echo "$(get_text "CRON_SCHEDULE_SAVED") '$CRON_SCHEDULE'."
     else
         echo "$(get_text "BACKUP_DONE_NO_CRON")"
     fi
 
-    echo "$(get_text "PRESS_ENTER_TO_RETURN")"
-    read -r
+    echo ""
+    read -p "$(get_text "PRESS_ENTER_TO_RETURN")"
     start
 }
