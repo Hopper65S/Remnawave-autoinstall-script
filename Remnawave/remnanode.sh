@@ -348,24 +348,43 @@ setup_firewall() {
     echo "$(get_text APPLYING_IPTABLES)"
     sleep 2
 
+
+    # Проверяем, существует ли переменная IP_PANEL в текущей сессии
+    if [ -z "$IP_PANEL" ]; then
+        echo -e "${YELLOW}$(get_text "FIREWALL_IP_PANEL_NOT_FOUND")${NC}"
+        echo "$(get_text "FIREWALL_READING_ENV")"
+        
+        # Если переменной нет, пытаемся прочитать ее напрямую из .env файла
+        local config_file="/opt/Remnawave-autoinstall-script/.env"
+        if [ -f "$config_file" ] && grep -q "IP_PANEL" "$config_file"; then
+            # Извлекаем значение, убирая кавычки
+            IP_PANEL=$(grep "IP_PANEL" "$config_file" | cut -d'=' -f2 | tr -d '"')
+            echo -e "${GREEN}$(get_text "FIREWALL_IP_PANEL_READ_SUCCESS") $IP_PANEL${NC}"
+        else
+            echo -e "${RED}$(get_text "FIREWALL_IP_PANEL_READ_FAIL")${NC}"
+            # Убедимся, что переменная точно пустая, если чтение не удалось
+            IP_PANEL=""
+        fi
+        sleep 1
+    fi
+
     # --- БЕЗОПАСНОЕ ДОБАВЛЕНИЕ ПРАВИЛ В INPUT ---
 
-    # 1. Разрешаем уже установленные и связанные соединения. Это самое важное правило.
     echo "$(get_text "FIREWALL_ALLOW_ESTABLISHED")"
     add_iptables_rule_if_not_exists INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-    # 2. Разрешаем SSH-порт, указанный в конфиге
     echo "$(get_text "FIREWALL_ALLOWING_SSH") $SSH_PORT"
     add_iptables_rule_if_not_exists INPUT -p tcp --dport "$SSH_PORT" -j ACCEPT
 
-    # 3. Разрешаем стандартные веб-порты (необходимы для работы Reality)
     echo "$(get_text "FIREWALL_ALLOWING_WEB")"
     add_iptables_rule_if_not_exists INPUT -p tcp --dport 80 -j ACCEPT
     add_iptables_rule_if_not_exists INPUT -p tcp --dport 443 -j ACCEPT
 
-    # 4. Разрешаем порт ноды (2222) ТОЛЬКО с IP-адреса панели
-    echo "$(get_text "FIREWALL_ALLOWING_NODE") $IP_PANEL"
-    add_iptables_rule_if_not_exists INPUT -p tcp -s "$IP_PANEL" --dport 2222 -j ACCEPT
+    # Теперь добавляем правило для ноды, ТОЛЬКО если IP_PANEL не пустая
+    if [ -n "$IP_PANEL" ]; then
+        echo "$(get_text "FIREWALL_ALLOWING_NODE") $IP_PANEL"
+        add_iptables_rule_if_not_exists INPUT -p tcp -s "$IP_PANEL" --dport 2222 -j ACCEPT
+    fi
 
     echo ""
     echo -e "${GREEN}$(get_text IPTABLES_SUCCESS)${NC}"
