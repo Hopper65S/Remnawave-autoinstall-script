@@ -5,7 +5,7 @@ generate_random_string() {
     local random_string=""
 
     if [ -z "$length" ]; then
-        echo "❌ Ошибка: Не указана длина строки."
+        echo "$(get_text "API_ERROR_NO_LENGTH")"
         return 1
     fi
 
@@ -17,9 +17,9 @@ generate_random_string() {
 
 register_panel_user_interactive() {
     # 1. Запрашиваем домен панели
-    read -p "Пожалуйста, введите домен вашей панели (например, panel.example.com): " domain
+    read -p "$(get_text "API_REG_PROMPT_DOMAIN")" domain
     if [ -z "$domain" ]; then
-        echo "❌ ОШИБКА: Домен не может быть пустым."
+        echo "$(get_text "API_ERROR_DOMAIN_EMPTY")"
         sleep 3
         return 1
     fi
@@ -28,7 +28,7 @@ register_panel_user_interactive() {
     local username=$(generate_random_string 12)
     local password=$(generate_random_string 24)
     
-    echo "📝 Генерирую случайные учетные данные..."
+    echo "$(get_text "API_REG_GENERATING_CREDS")"
     sleep 2
     
     # 3. Отправляем API-запрос на регистрацию
@@ -43,7 +43,7 @@ register_panel_user_interactive() {
     local token=$(echo "$response" | jq -r '.response.token' 2>/dev/null)
     
     if [ -n "$token" ]; then
-        echo "🎉 УСПЕХ: Автоматическая регистрация завершена!"
+        echo "$(get_text "API_REG_SUCCESS")"
         
         # 5. Сохраняем учетные данные и токен в файл .env в папке скрипта
         local SCRIPT_DIR="/opt/Remnawave-autoinstall-script"
@@ -54,18 +54,18 @@ register_panel_user_interactive() {
         echo "ADMIN_PASSWORD=$password" >> "$ENV_FILE"
         echo "JWT_API_TOKENS_SECRET=$token" >> "$ENV_FILE"
         
-        echo "✅ Учетные данные и токен сохранены в $ENV_FILE"
+        echo "$(get_text "API_REG_CREDS_SAVED")$ENV_FILE"
         
         # 6. Выводим данные для пользователя
-        echo "❗❗ ВНИМАНИЕ: СОХРАНИТЕ ЭТИ ДАННЫЕ. ОНИ НЕ БУДУТ ПОКАЗАНЫ СНОВА."
-        echo "🔑 Логин: $username"
-        echo "🔑 Пароль: $password"
+        echo "$(get_text "API_REG_SAVE_WARNING")"
+        echo "$(get_text "API_REG_LOGIN")$username"
+        echo "$(get_text "API_REG_PASSWORD")$password"
         
         sleep 10
         return 0
     else
-        echo "❌ ОШИБКА: Не удалось зарегистрировать пользователя."
-        echo "❗ Ответ сервера: $response"
+        echo "$(get_text "API_REG_FAILED")"
+        echo "$(get_text "API_REG_SERVER_RESPONSE")$response"
         sleep 5
         return 1
     fi

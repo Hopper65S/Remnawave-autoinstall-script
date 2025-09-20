@@ -1,5 +1,4 @@
 #!/bin/bash
-# REMNAWAVE MANAGER SCRIPT by Hopper
 # Colors
 ORANGE='\033[93m'
 GREEN='\033[32m'
@@ -53,6 +52,7 @@ source "api.sh"
 source "warp.sh"
 source "check.sh"
 source "backup.sh"
+source "unistall.sh"
 
 
 
