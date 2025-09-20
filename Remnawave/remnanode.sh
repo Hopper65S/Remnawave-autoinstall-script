@@ -292,11 +292,69 @@ select_vpn_method() {
         fi
     fi
 }
+add_iptables_rule_if_not_exists() {
+    # Проверяем наличие правила с помощью флага -C
+    if ! sudo iptables -C "$@" &>/dev/null; then
+        # Если правила нет (команда завершилась с ошибкой), добавляем его
+        echo -n "-> $(get_text "FIREWALL_ADDING_RULE") "
+        sudo iptables -I "$@"
+        # Выводим само правило для наглядности
+        echo "iptables -I $@"
+    else
+        # Если правило уже есть, сообщаем об этом
+        echo "-> $(get_text "FIREWALL_RULE_EXISTS") iptables -I $@"
+    fi
+}
+
+setup_firewall() {
+    echo "$(get_text FIREWALL_SETUP_START)"
+    sleep 1
+
+    # Проверка, установлен ли iptables
+    if ! command -v iptables &> /dev/null; then
+        echo "$(get_text IPTABLES_NOT_FOUND)"
+        sleep 2
+        sudo apt-get update && sudo apt-get install -y iptables
+        echo "$(get_text IPTABLES_INSTALL_SUCCESS)"
+    else
+        echo "$(get_text IPTABLES_ALREADY_INSTALLED)"
+    fi
+    sleep 1
+
+    echo "$(get_text APPLYING_IPTABLES)"
+    sleep 2
+
+    # --- БЕЗОПАСНОЕ ДОБАВЛЕНИЕ ПРАВИЛ В INPUT ---
+
+    # 1. Разрешаем уже установленные и связанные соединения. Это самое важное правило.
+    echo "$(get_text "FIREWALL_ALLOW_ESTABLISHED")"
+    add_iptables_rule_if_not_exists INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+    # 2. Разрешаем SSH-порт, указанный в конфиге
+    echo "$(get_text "FIREWALL_ALLOWING_SSH") $SSH_PORT"
+    add_iptables_rule_if_not_exists INPUT -p tcp --dport "$SSH_PORT" -j ACCEPT
+
+    # 3. Разрешаем стандартные веб-порты (необходимы для работы Reality)
+    echo "$(get_text "FIREWALL_ALLOWING_WEB")"
+    add_iptables_rule_if_not_exists INPUT -p tcp --dport 80 -j ACCEPT
+    add_iptables_rule_if_not_exists INPUT -p tcp --dport 443 -j ACCEPT
+
+    # 4. Разрешаем порт ноды (2222) ТОЛЬКО с IP-адреса панели
+    echo "$(get_text "FIREWALL_ALLOWING_NODE") $IP_PANEL"
+    add_iptables_rule_if_not_exists INPUT -p tcp -s "$IP_PANEL" --dport 2222 -j ACCEPT
+
+    echo ""
+    echo -e "${GREEN}$(get_text IPTABLES_SUCCESS)${NC}"
+    sleep 1
+    echo -e "${GREEN}$(get_text FIREWALL_SETUP_COMPLETE)${NC}"
+    sleep 1
+}
 
 run_full_install() {
     install_docker
     setup_remnanode
     select_vpn_method # Эта функция теперь устанавливает Caddy при необходимости
+    install_caddy_for_remnanode
     setup_firewall
     run_remnanode_and_check_logs # Запускаем ноду и проверяем логи в конце
     echo -e "\n${GREEN}🎉 $(get_text FULL_INSTALL_COMPLETE)${NC}"
