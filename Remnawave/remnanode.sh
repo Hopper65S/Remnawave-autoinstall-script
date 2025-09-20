@@ -148,6 +148,7 @@ install_caddy_for_remnanode() {
     echo "$(get_text CADDY_INSTALL_START)"
     sleep 1
     
+    # Используем современный синтаксис docker compose
     if ! command -v docker &> /dev/null || ! command -v docker compose &> /dev/null; then
         echo "$(get_text DOCKER_COMPOSE_NOT_INSTALLED)"
         echo "$(get_text DOCKER_COMPOSE_NOT_INSTALLED_HINT)"
@@ -156,63 +157,84 @@ install_caddy_for_remnanode() {
     
     local CADDY_DIR="/opt/remnanode_caddy"
     
-    # Шаг 1: Принудительно останавливаем и удаляем старый контейнер, если он существует.
     if sudo docker ps -a --format '{{.Names}}' | grep -q "^remnanode-caddy$"; then
         echo "$(get_text CADDY_CONTAINER_DELETING)"
         sudo docker rm -f remnanode-caddy &>/dev/null
         echo "$(get_text CADDY_CONTAINER_DELETED)"
     fi
 
-    # Шаг 2: Создаем директории
+    if [ -z "$CADDY_DOMAIN" ]; then
+        echo -e "${YELLOW}$(get_text "CADDY_DOMAIN_NOT_FOUND")${NC}"
+        echo "$(get_text "FIREWALL_READING_ENV")"
+        
+        local config_file="/opt/Remnawave-autoinstall-script/.env"
+        if [ -f "$config_file" ] && grep -q "CADDY_DOMAIN" "$config_file"; then
+            CADDY_DOMAIN=$(grep "CADDY_DOMAIN" "$config_file" | cut -d'=' -f2 | tr -d '"')
+            echo -e "${GREEN}$(get_text "CADDY_DOMAIN_READ_SUCCESS") $CADDY_DOMAIN${NC}"
+        else
+            echo -e "${RED}$(get_text "CADDY_DOMAIN_READ_FAIL")${NC}"
+            CADDY_DOMAIN=""
+        fi
+        sleep 1
+    fi
+
     echo "$(get_text CREATE_CADDY_DIRS)"
     sudo mkdir -p "$CADDY_DIR/www"
     
-    # Шаг 3: Создаем Caddyfile. УБРАНА вся логика с доменами и SSL.
-    # Caddy будет просто слушать порт 8443 и отдавать статику.
+
     echo "$(get_text CREATE_CADDYFILE)"
     local CADDYFILE_CONTENT
-    CADDYFILE_CONTENT=$(cat <<-CADDYFILE_EOF
-		$CADDY_DOMAIN:8443 {
-	    root * /var/www/html
-	    file_server {
-	        index index.html
-	    }
-	}
-	CADDYFILE_EOF
-    )
+    if [ -n "$CADDY_DOMAIN" ]; then
+        CADDYFILE_CONTENT=$(cat <<-EOF
+			$CADDY_DOMAIN:8443 {
+			    root * /var/www/html
+			    file_server {
+			        index index.html
+			    }
+			}
+		EOF
+        )
+    else
+        CADDYFILE_CONTENT=$(cat <<-EOF
+			:8443 {
+			    root * /var/www/html
+			    file_server
+                    index index.html
+			}
+		EOF
+        )
+    fi
     echo "$CADDYFILE_CONTENT" | sudo tee "$CADDY_DIR/Caddyfile" > /dev/null
     echo "$(get_text SUCCESS_CADDYFILE)"
 
-    # Шаг 4: Создаем docker-compose.yml. УБРАНЫ порты 80 и 443.
+    # --- ИСПРАВЛЕННЫЙ DOCKER-COMPOSE.YML ---
     local COMPOSE_CONTENT
     COMPOSE_CONTENT=$(cat <<COMPOSE_EOF
 services:
-    caddy:
-        image: caddy:latest
-        container_name: remnanode-caddy
-        restart: always
-        ports:
-            - "80:80"
-            - "8443:8443"
-        volumes:
-            - ./Caddyfile:/etc/caddy/Caddyfile
-            - ./www:/var/www/html
-            - caddy-ssl-data:/data
+  caddy:
+    image: caddy:latest
+    container_name: remnanode-caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "8443:8443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./www:/var/www/html
+      - caddy-ssl-data:/data
 volumes:
-    caddy-ssl-data:
+  caddy-ssl-data:
         driver: local
         external: false
-        name: caddy-ssl-data
+        name: caddy-ssl-data 
 COMPOSE_EOF
     )
     echo "$COMPOSE_CONTENT" | sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null
     
-    # Шаг 5: Запускаем Caddy
     echo "$(get_text START_CADDY_CONTAINER)"
     cd "$CADDY_DIR"
     sudo docker compose up -d &>/dev/null
     
-    # Шаг 6: Проверяем, что контейнер запустился
     echo "$(get_text WAITING_FOR_CONTAINER_START)"
     for i in {1..10}; do
         if sudo docker ps --filter "name=remnanode-caddy" --filter "status=running" | grep -q "remnanode-caddy"; then
@@ -228,7 +250,7 @@ COMPOSE_EOF
         return 1
     fi
     
-    # Шаг 7: Конфигурация заглушки
+    # Конфигурация заглушки
     echo -e "\n--- $(get_text WEBPAGE_SETUP_HEADER) ---"
     read -p "$(get_text ENTER_WEBPAGE_PATH)" WEB_FILE_PATH
     if [[ -n "$WEB_FILE_PATH" && "$WEB_FILE_PATH" != "0" ]]; then

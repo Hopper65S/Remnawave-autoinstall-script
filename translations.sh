@@ -308,6 +308,7 @@ lang_ru=(
     ["API_REG_FAILED"]="❌ ОШИБКА: Не удалось зарегистрировать пользователя."
     ["API_REG_SERVER_RESPONSE"]="❗ Ответ сервера: "
     #Remnanode.sh
+    ["CADDY_DOMAIN_READ_SUCCESS"]="✅ Домен для Caddy успешно загружен:"
     ["FIREWALL_IP_PANEL_NOT_FOUND"]="Переменная IP_PANEL не найдена в памяти."
     ["FIREWALL_READING_ENV"]="Пытаюсь прочитать значение из файла .env..."
     ["FIREWALL_IP_PANEL_READ_SUCCESS"]="✅ IP панели успешно загружен:"
