@@ -165,7 +165,7 @@ install_caddy_for_remnanode() {
     echo "$(get_text CREATE_CADDYFILE)"
     local CADDYFILE_CONTENT
     CADDYFILE_CONTENT=$(cat <<-EOF
-		$DOMAIN:8443 {
+		$CADDY_DOMAIN:8443 {
 		    reverse_proxy remnanode:2222
 		    root * /var/www/html
 		    file_server {
