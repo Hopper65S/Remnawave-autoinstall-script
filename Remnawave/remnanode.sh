@@ -143,19 +143,13 @@ install_caddy_for_remnanode() {
         return 1
     fi
     
-    create_remnanode_network
-    if [ $? -ne 0 ]; then return 1; fi
-
     local CADDY_DIR="/opt/remnanode_caddy"
     
     if sudo docker ps -a --format '{{.Names}}' | grep -q "^remnanode-caddy$"; then
         echo "$(get_text CADDY_CONTAINER_EXISTS)"
         if yn_prompt "$(get_text CADDY_CONTAINER_DELETE_PROMPT)"; then
             echo "$(get_text CADDY_CONTAINER_DELETING)"
-            # Убедимся, что мы в нужной директории, чтобы `down` сработал
-            if [ -f "$CADDY_DIR/docker-compose.yml" ]; then
-                (cd "$CADDY_DIR" && sudo docker compose down -v)
-            fi
+            (cd "$CADDY_DIR" && sudo docker compose down -v &>/dev/null)
             sudo docker rm -f remnanode-caddy &>/dev/null
             echo "$(get_text CADDY_CONTAINER_DELETED)"
         else
@@ -167,43 +161,40 @@ install_caddy_for_remnanode() {
     echo "$(get_text CREATE_CADDY_DIRS)"
     sudo mkdir -p "$CADDY_DIR/www"
     
+    # --- ИЗМЕНЕНИЕ: Caddyfile теперь проксирует на localhost ---
     echo "$(get_text CREATE_CADDYFILE)"
-    sudo tee "$CADDY_DIR/Caddyfile" > /dev/null <<EOF
-$DOMAIN {
-    reverse_proxy remnanode:2222
-    root * /var/www/html
-    file_server {
-        index index.html
-    }
-}
-EOF
+    local CADDYFILE_CONTENT
+    CADDYFILE_CONTENT=$(cat <<-EOF
+		$DOMAIN:8443 {
+		    reverse_proxy remnanode:2222
+		    root * /var/www/html
+		    file_server {
+		        index index.html
+		    }
+		}
+	EOF
+    )
+    echo "$CADDYFILE_CONTENT" | sudo tee "$CADDY_DIR/Caddyfile" > /dev/null
     echo "$(get_text SUCCESS_CADDYFILE)"
 
-    # --- НОВАЯ ЛОГИКА С УПРАВЛЕНИЕМ docker-compose.yml ---
-
-    # 1. Создаем docker-compose.yml С ОТКРЫТЫМ ПОРТОМ 80
     echo "$(get_text CADDY_CONFIGURING_FOR_CERT)"
-    sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null <<EOF
-services:
-  caddy:
-    image: caddy:latest
-    container_name: remnanode-caddy
-    restart: always
-    ports:
-      - "80:80"
-      - "8443:8443"
-    networks:
-      - remnanode-network
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./www:/var/www/html
-      - caddy_data:/data
-networks:
-  remnanode-network:
-    external: true
-volumes:
-  caddy_data:
-EOF
+    local COMPOSE_CONTENT_V1
+    COMPOSE_CONTENT_V1=$(cat <<-EOF
+		services:
+		  caddy:
+		    image: caddy:latest
+		    container_name: remnanode-caddy
+		    restart: always
+		    network_mode: "host"
+		    volumes:
+		      - ./Caddyfile:/etc/caddy/Caddyfile
+		      - ./www:/var/www/html
+		      - caddy_data:/data
+		volumes:
+		  caddy_data:
+	EOF
+    )
+    echo "$COMPOSE_CONTENT_V1" | sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null
     sleep 1
 
     # 2. Запускаем Caddy с этой конфигурацией
@@ -234,39 +225,16 @@ EOF
     else
         echo -e "${RED}$(get_text "CADDY_CERT_FAILED")${NC}"
         sudo docker logs remnanode-caddy --tail 15
-        # Даже в случае ошибки, пытаемся "прибраться"
         (cd "$CADDY_DIR" && sudo docker compose down -v)
         return 1
     fi
 
-    # 5. ПЕРЕЗАПИСЫВАЕМ docker-compose.yml БЕЗ ПОРТА 80
-    echo "$(get_text CADDY_RECONFIGURING_SECURE)"
-    sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null <<EOF
-services:
-  caddy:
-    image: caddy:latest
-    container_name: remnanode-caddy
-    restart: always
-    ports:
-      - "8443:8443"
-    networks:
-      - remnanode-network
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - ./www:/var/www/html
-      - caddy_data:/data
-networks:
-  remnanode-network:
-    external: true
-volumes:
-  caddy_data:
-EOF
-    
-    # 6. Применяем новую конфигурацию (Docker Compose сам остановит и пересоздаст контейнер)
-    sudo docker compose up -d --force-recreate
+    echo "$(get_text "CADDY_RECONFIGURING_SECURE")"
+    sudo docker compose down
+    sudo docker compose up -d
     echo -e "${GREEN}$(get_text "CADDY_RECONFIGURED_SUCCESS")${NC}"
 
-    # Конфигурация заглушки
+    # Конфигурация заглушки...
     echo -e "\n--- $(get_text WEBPAGE_SETUP_HEADER) ---"
     read -p "$(get_text ENTER_WEBPAGE_PATH)" WEB_FILE_PATH
     if [[ -n "$WEB_FILE_PATH" && "$WEB_FILE_PATH" != "0" ]]; then
