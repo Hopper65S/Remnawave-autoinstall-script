@@ -221,7 +221,7 @@ EOF
     
     echo "$(get_text START_CADDY_CONTAINER)"
     cd "$CADDY_DIR"
-    sudo docker-compose up -d
+    sudo docker compose up -d
     if [ $? -ne 0 ]; then
         echo -e "${RED}$(get_text ERROR_START_CADDY)${NC}"
         echo "$(get_text CHECK_PORT_BUSY)"
@@ -237,7 +237,7 @@ EOF
 run_remnanode_and_check_logs() {
     cd /opt/remnanode
     echo "$(get_text START_REMNANODE_CONTAINER)"
-    sudo docker-compose up -d
+    sudo docker compose up -d
     if [ $? -ne 0 ]; then
         echo -e "${RED}$(get_text ERROR_START_REMNANODE)${NC}"
         return 1
