@@ -328,7 +328,6 @@ setup_firewall() {
     echo "$(get_text FIREWALL_SETUP_START)"
     sleep 1
 
-    # Проверка, установлен ли iptables
     if ! command -v iptables &> /dev/null; then
         echo "$(get_text IPTABLES_NOT_FOUND)"
         sleep 2
@@ -342,42 +341,48 @@ setup_firewall() {
     echo "$(get_text APPLYING_IPTABLES)"
     sleep 2
 
-
-    # Проверяем, существует ли переменная IP_PANEL в текущей сессии
     if [ -z "$IP_PANEL" ]; then
         echo -e "${YELLOW}$(get_text "FIREWALL_IP_PANEL_NOT_FOUND")${NC}"
         echo "$(get_text "FIREWALL_READING_ENV")"
         
-        # Если переменной нет, пытаемся прочитать ее напрямую из .env файла
         local config_file="/opt/Remnawave-autoinstall-script/.env"
         if [ -f "$config_file" ] && grep -q "IP_PANEL" "$config_file"; then
-            # Извлекаем значение, убирая кавычки
             IP_PANEL=$(grep "IP_PANEL" "$config_file" | cut -d'=' -f2 | tr -d '"')
             echo -e "${GREEN}$(get_text "FIREWALL_IP_PANEL_READ_SUCCESS") $IP_PANEL${NC}"
         else
             echo -e "${RED}$(get_text "FIREWALL_IP_PANEL_READ_FAIL")${NC}"
-            # Убедимся, что переменная точно пустая, если чтение не удалось
             IP_PANEL=""
         fi
         sleep 1
     fi
 
-    # --- БЕЗОПАСНОЕ ДОБАВЛЕНИЕ ПРАВИЛ В INPUT ---
+    # --- БЕЗОПАСНОЕ ДОБАВЛЕНИЕ ПРАВИЛ ---
 
-    echo "$(get_text "FIREWALL_ALLOW_ESTABLISHED")"
+    # Правила для цепочки INPUT (доступ к самому серверу)
+    echo "$(get_text FIREWALL_ALLOW_ESTABLISHED)"
     add_iptables_rule_if_not_exists INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-    echo "$(get_text "FIREWALL_ALLOWING_SSH") $SSH_PORT"
+    echo "$(get_text FIREWALL_ALLOWING_SSH) $SSH_PORT"
     add_iptables_rule_if_not_exists INPUT -p tcp --dport "$SSH_PORT" -j ACCEPT
 
-    echo "$(get_text "FIREWALL_ALLOWING_WEB")"
+    echo "$(get_text FIREWALL_ALLOWING_WEB)"
     add_iptables_rule_if_not_exists INPUT -p tcp --dport 80 -j ACCEPT
     add_iptables_rule_if_not_exists INPUT -p tcp --dport 443 -j ACCEPT
 
-    # Теперь добавляем правило для ноды, ТОЛЬКО если IP_PANEL не пустая
+    # --- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: РАЗРЕШАЕМ FORWARD ДЛЯ DOCKER ---
+    # Это позволяет контейнерам общаться с внешним миром и друг с другом.
+    echo "-> $(get_text FIREWALL_ADDING_RULE)"
+    add_iptables_rule_if_not_exists FORWARD -j DOCKER-USER
+    add_iptables_rule_if_not_exists FORWARD -j DOCKER-ISOLATION-STAGE-2
+    add_iptables_rule_if_not_exists FORWARD -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+    add_iptables_rule_if_not_exists FORWARD -o docker0 -j DOCKER
+    add_iptables_rule_if_not_exists FORWARD -i docker0 ! -o docker0 -j ACCEPT
+    add_iptables_rule_if_not_exists FORWARD -i docker0 -o docker0 -j ACCEPT
+    
+    # Правило для доступа к КОНТЕЙНЕРУ remnanode добавляем в DOCKER-USER
     if [ -n "$IP_PANEL" ]; then
-        echo "$(get_text "FIREWALL_ALLOWING_NODE") $IP_PANEL"
-        add_iptables_rule_if_not_exists INPUT -p tcp -s "$IP_PANEL" --dport 2222 -j ACCEPT
+        echo "$(get_text FIREWALL_DOCKER_USER_RULE)"
+        add_iptables_rule_if_not_exists DOCKER-USER -p tcp -s "$IP_PANEL" --dport 2222 -j ACCEPT
     fi
 
     echo ""
