@@ -185,22 +185,20 @@ install_caddy_for_remnanode() {
 
     # Шаг 4: Создаем docker-compose.yml. УБРАНЫ порты 80 и 443.
     local COMPOSE_CONTENT
-    COMPOSE_CONTENT=$(cat <<-COMPOSE_EOF
-		services:
-		  caddy:
-		    image: caddy:latest
-		    container_name: remnanode-caddy
-		    restart: always
-		    ports:
-              - "80:80"
-		      - "8443:8443"
-		    volumes:
-		      - ./Caddyfile:/etc/caddy/Caddyfile
-		      - ./www:/var/www/html
-		      - caddy_data:/data
-		volumes:
-		  caddy_data:
-	COMPOSE_EOF
+    COMPOSE_CONTENT=$(cat <<COMPOSE_EOF
+services:
+    caddy:
+        image: caddy:latest
+        container_name: remnanode-caddy
+        restart: always
+        ports:
+            - "80:80"
+            - "8443:8443"
+        volumes:
+            - ./Caddyfile:/etc/caddy/Caddyfile
+            - ./www:/var/www/html
+            - caddy_data:/data
+COMPOSE_EOF
     )
     echo "$COMPOSE_CONTENT" | sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null
     
