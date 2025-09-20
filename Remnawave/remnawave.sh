@@ -450,20 +450,37 @@ cleanup_remnawave() {
 
         # Проверяем, существует ли директория, чтобы избежать ошибок
         if [ -d "/opt/remnawave" ]; then
-            cd /opt/remnawave
+            
 
-            # Эта команда - лучший способ удалить все компоненты compose-проекта
-            echo "$(get_text "CLEANUP_PANEL_COMPONENTS")"
-            sudo docker compose down --volumes
-            echo -e "${GREEN}$(get_text "CLEANUP_PANEL_COMPONENTS_SUCCESS")${NC}"
+            # 1. Останавливаем все контейнеры по именам
+            echo "$(get_text "CLEANUP_PANEL_STOPPING_CONTAINERS")"
+            sudo docker stop remnawave remnawave-db remnawave-redis caddy &>/dev/null
             sleep 1
 
-            # Возвращаемся на уровень выше, чтобы безопасно удалить папку
-            cd ..
+            # 2. Удаляем все контейнеры
+            echo "$(get_text "CLEANUP_PANEL_REMOVING_CONTAINERS")"
+            sudo docker rm remnawave remnawave-db remnawave-redis caddy &>/dev/null
+            sleep 1
+            
+            # 3. Удаляем тома с данными. Это самый важный шаг для полной очистки.
+            # Названия томов обычно: remnawave_postgres-data, remnawave_redis-data, caddy-ssl-data
+            echo "$(get_text "CLEANUP_PANEL_REMOVING_VOLUMES")"
+            sudo docker volume rm remnawave_postgres-data remnawave_redis-data caddy-ssl-data &>/dev/null
+            sleep 1
+
+            # 4. Удаляем сеть, созданную для проекта
+            echo "$(get_text "CLEANUP_PANEL_REMOVING_NETWORK")"
+            sudo docker network rm remnawave-network &>/dev/null
+            sleep 1
+
+            echo -e "${GREEN}$(get_text "CLEANUP_PANEL_SUCCESS")${NC}"
+            
+            # 5. Удаляем директорию с файлами
             echo "$(get_text "CLEANUP_PANEL_DIR")"
             sudo rm -rf /opt/remnawave
             echo -e "${GREEN}$(get_text "CLEANUP_PANEL_DIR_SUCCESS")${NC}"
             sleep 1
+
         else
             echo -e "${YELLOW}$(get_text "CLEANUP_PANEL_NOT_FOUND")${NC}"
             sleep 2
