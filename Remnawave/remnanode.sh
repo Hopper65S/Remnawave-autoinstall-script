@@ -401,15 +401,14 @@ cleanup_remnanode() {
     echo "$(get_text CLEANUP_CONTAINERS)"
     sudo docker stop remnanode &>/dev/null
     sudo docker rm remnanode &>/dev/null
-    sudo docker stop caddy &>/dev/null
-    sudo docker rm caddy &>/dev/null
+    sudo docker stop remnanode-caddy &>/dev/null
+    sudo docker rm remnanode-caddy &>/dev/null
     echo "$(get_text CLEANUP_CONTAINERS_SUCCESS)"
     sleep 1
 
     # Удаление директорий
     echo "$(get_text CLEANUP_DIRS)"
-    sudo rm -rf /opt/remnanode /opt/caddy
-    sudo rm -rf /opt/remnawave
+    sudo rm -rf /opt/remnanode /opt/remnanode_caddy
     echo "$(get_text CLEANUP_DIRS_SUCCESS)"
     sleep 1
 
