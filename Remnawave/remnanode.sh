@@ -66,6 +66,10 @@ install_docker() {
         echo "$(get_text DOCKER_INSTALLING)"
         sleep 0.5
         curl -fsSL https://get.docker.com | sh
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}❌ $(get_text DOCKER_INSTALL_ERROR)${NC}"
+            exit 1
+        fi
         sleep 4
     else
         echo "$(get_text DOCKER_ALREADY_INSTALLED)"
@@ -74,6 +78,23 @@ install_docker() {
 
     echo "$(get_text DOCKER_INSTALL_COMPLETE)"
     sleep 3
+}
+
+# Новая функция для создания сети, чтобы избежать дублирования кода
+create_remnanode_network() {
+    echo "$(get_text "NETWORK_CREATION_START")"
+    if ! sudo docker network inspect remnanode-network &>/dev/null; then
+        sudo docker network create remnanode-network
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}$(get_text "NETWORK_CREATE_FAILED")${NC}"
+            return 1
+        fi
+        echo -e "${GREEN}$(get_text "NETWORK_CREATED_SUCCESS")${NC}"
+    else
+        echo -e "${YELLOW}$(get_text "NETWORK_ALREADY_EXISTS")${NC}"
+    fi
+    sleep 1
+    return 0
 }
 
 setup_remnanode() {
@@ -86,101 +107,67 @@ setup_remnanode() {
         return 1
     fi
     
-    # Всегда обновляем файл .env с актуальным ключом
     echo "$(get_text CREATE_ENV_FILE)"
-    sudo cat > .env <<EOF
+    sudo tee .env > /dev/null <<EOF
 APP_PORT=2222
 SSL_CERT=$SSL_CERT_KEY
 EOF
     echo "$(get_text SUCCESS_ENV_FILE)"
     
-    # Создаем docker-compose.yml только если файла нет
     echo "$(get_text CHECK_DOCKER_COMPOSE)"
     if [ ! -f docker-compose.yml ]; then
-        sudo cat > docker-compose.yml <<EOF
+        sudo tee docker-compose.yml > /dev/null <<EOF
 services:
-    remnanode:
-        container_name: remnanode
-        hostname: remnanode
-        image: remnawave/node:latest
-        restart: always
-        network_mode: host
-        env_file:
-            - .env
-networks:
-  remnanode-network:
-    name: remnanode-network
-    driver: bridge
-    external: true
+  remnanode:
+    container_name: remnanode
+    hostname: remnanode
+    image: remnawave/node:latest
+    restart: always
+    network_mode: "host"
+    env_file:
+      - .env
 EOF
         echo "$(get_text CREATE_DOCKER_COMPOSE)"
     else
         echo "$(get_text DOCKER_COMPOSE_EXISTS)"
     fi
-    
-    # Запускаем контейнер
-    echo "$(get_text START_REMNANODE_CONTAINER)"
-    sudo docker compose up -d
-    if [ $? -ne 0 ]; then
-        echo "$(get_text ERROR_START_REMNANODE)"
-        return 1
-    fi
-
-    echo "$(get_text REMNANODE_SETUP_COMPLETE)"
 }
 
-install_caddy_docker_remnanode() {
-    # Функция для проверки существования Docker-контейнера
-    container_exists() {
-        sudo docker ps -a --format '{{.Names}}' | grep -q "^caddy$"
-    }
-
+install_caddy_for_remnanode() {
     echo "$(get_text CADDY_INSTALL_START)"
     sleep 1
     
-    # Проверка наличия Docker и Docker Compose
-    if ! command -v docker &> /dev/null || ! command -v docker compose &> /dev/null; then
+    if ! command -v docker &> /dev/null || ! command -v docker-compose &> /dev/null; then
         echo "$(get_text DOCKER_COMPOSE_NOT_INSTALLED)"
-        sleep 1
         echo "$(get_text DOCKER_COMPOSE_NOT_INSTALLED_HINT)"
-        sleep 1
         return 1
     fi
+    
+    # Создаем сеть, если она не существует
+    create_remnanode_network
+    if [ $? -ne 0 ]; then return 1; fi
 
-    # === Шаг 1: Проверка и удаление существующего контейнера Caddy ===
-    if container_exists; then
+    # Используем отдельную папку для Caddy, чтобы не было конфликтов
+    local CADDY_DIR="/opt/remnanode_caddy"
+    
+    # Если контейнер Caddy существует, останавливаем и удаляем его
+    if sudo docker ps -a --format '{{.Names}}' | grep -q "^remnanode-caddy$"; then
         echo "$(get_text CADDY_CONTAINER_EXISTS)"
-        read -p "$(get_text CADDY_CONTAINER_DELETE_PROMPT)" REPLY
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            echo ""
+        if yn_prompt "$(get_text CADDY_CONTAINER_DELETE_PROMPT)"; then
             echo "$(get_text CADDY_CONTAINER_DELETING)"
-            sleep 1
-            sudo docker rm -f caddy
+            sudo docker rm -f remnanode-caddy
             echo "$(get_text CADDY_CONTAINER_DELETED)"
-            sleep 1
         else
-            echo ""
             echo "$(get_text CADDY_CONTAINER_KEEP)"
-            sleep 1
-            return 1 # Прерываем выполнение функции, если пользователь отказался
+            return 1
         fi
     fi
 
-    # === Шаг 2: Создание директорий для Caddy ===
-    CADDY_DIR="/opt/remnanode/caddy"
     echo "$(get_text CREATE_CADDY_DIRS)"
-    sleep 1
-    sudo mkdir -p "$CADDY_DIR"
     sudo mkdir -p "$CADDY_DIR/www"
-    # Устанавливаем права на директорию, чтобы избежать ошибок
-    sudo chown -R $USER:$USER "$CADDY_DIR"
-    echo "$(get_text SUCCESS_CREATE_DIRS)"
-    sleep 1
-
-    # === Шаг 3: Создание файла конфигурации Caddyfile ===
+    
     echo "$(get_text CREATE_CADDYFILE)"
-    sleep 1
-    cat <<EOF | sudo tee "$CADDY_DIR/Caddyfile" > /dev/null
+    sudo tee "$CADDY_DIR/Caddyfile" > /dev/null <<EOF
 $DOMAIN:8443 {
     reverse_proxy remnanode:2222
     root * /var/www/html
@@ -189,186 +176,130 @@ $DOMAIN:8443 {
     }
 }
 EOF
-    if [ $? -ne 0 ]; then
-        echo "$(get_text ERROR_CREATE_CADDYFILE)"
-        sleep 1
-        return 1
-    fi
     echo "$(get_text SUCCESS_CADDYFILE)"
-    sleep 1
 
-    # === Шаг 4: Создание файла docker-compose.yml ===
     echo "$(get_text CREATE_CADDY_COMPOSE)"
-    sleep 1
-    cat <<EOF | sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null
+    sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null <<EOF
 services:
   caddy:
-    image: caddy:2.9
-    container_name: caddy
-    hostname: caddy
+    image: caddy:latest
+    container_name: remnanode-caddy
     restart: always
     ports:
-      - '0.0.0.0:8443:8443'
+      - "8443:8443"
     networks:
       - remnanode-network
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy-ssl-data:/data
       - ./www:/var/www/html
+      - caddy_data:/data
 
 networks:
   remnanode-network:
-    name: remnanode-network
-    driver: bridge
-volumes:
-  caddy-ssl-data:
-    name: caddy-ssl-data
-    driver: local
-EOF
-    if [ $? -ne 0 ]; then
-        echo "$(get_text ERROR_CREATE_CADDY_COMPOSE)"
-        sleep 1
-        return 1
-    fi
-    echo "$(get_text SUCCESS_CADDY_COMPOSE)"
-    sleep 1
+    external: true
 
-    # === Шаг 5: Настройка веб-страницы ===
-    echo ""
-    echo "=============================================="
-    echo "$(get_text WEBPAGE_SETUP_HEADER)"
+volumes:
+  caddy_data:
+EOF
+    echo "$(get_text SUCCESS_CADDY_COMPOSE)"
+
+    # Настройка веб-страницы (заглушки)
+    echo -e "\n--- $(get_text WEBPAGE_SETUP_HEADER) ---"
     echo "$(get_text WEBPAGE_SETUP_INFO1)"
-    echo "$(get_text WEBPAGE_SETUP_INFO2)"
-    echo "$(get_text WEBPAGE_SETUP_INFO3)"
     read -p "$(get_text ENTER_WEBPAGE_PATH)" WEB_FILE_PATH
     
-    if [ "$WEB_FILE_PATH" != "0" ]; then
+    if [[ -n "$WEB_FILE_PATH" && "$WEB_FILE_PATH" != "0" ]]; then
         if [ -f "$WEB_FILE_PATH" ]; then
-            echo "$(get_text COPYING_FILE)"
-            sleep 1
             sudo cp "$WEB_FILE_PATH" "$CADDY_DIR/www/index.html"
-            if [ $? -ne 0 ]; then
-                echo "$(get_text ERROR_COPY_FILE)"
-                sleep 1
-                return 1
-            fi
             echo "$(get_text SUCCESS_COPY_FILE)"
-            sleep 1
         else
             echo "$(get_text FILE_NOT_FOUND_SKIP)"
-            sleep 1
         fi
     else
         echo "$(get_text WEBPAGE_SKIP)"
-        sleep 1
     fi
-
-    # === Шаг 6: Запуск контейнера Caddy ===
+    
     echo "$(get_text START_CADDY_CONTAINER)"
-    sleep 1
-    cd "$CADDY_DIR" || { echo "Ошибка: Не удалось перейти в директорию $CADDY_DIR"; return 1; }
-    sudo docker compose up -d
+    cd "$CADDY_DIR"
+    sudo docker-compose up -d
     if [ $? -ne 0 ]; then
-        echo "$(get_text ERROR_START_CADDY)"
-        sleep 1
+        echo -e "${RED}$(get_text ERROR_START_CADDY)${NC}"
         echo "$(get_text CHECK_PORT_BUSY)"
-        sleep 1
         return 1
     fi
     echo "$(get_text CADDY_CONTAINER_STARTED)"
     sleep 3
-    clear
-    
     echo "$(get_text CADDY_INSTALL_COMPLETE)"
-    sleep 4
-    # === Шаг 7: Проверка логов Remnanode на наличие ошибок ===
-    echo ""
-    echo "=============================================="
-    echo "$(get_text CHECK_REMNANODE_LOGS_HEADER)"
-    sleep 1
-    if sudo docker logs remnanode 2>&1 | grep -q "spawn xray error"; then
-        echo "$(get_text ERROR_LOGS_FOUND)"
-        sleep 1
-        echo "$(get_text ERROR_LOGS_REASONS)"
-        sleep 1
-        echo "$(get_text ERROR_LOGS_HINT)"
-        sleep 1
-    else
-        echo "$(get_text LOGS_CLEAN)"
-        sleep 2
-    fi
-}
-
-
-setup_firewall() {
-    echo "$(get_text FIREWALL_SETUP_START)"
-    sleep 1
-
-    # Проверка, установлен ли iptables
-    if ! command -v iptables &> /dev/null; then
-        echo "$(get_text IPTABLES_NOT_FOUND)"
-        sleep 2
-        sudo apt-get update
-        sudo apt-get install -y iptables
-        echo "$(get_text IPTABLES_INSTALL_SUCCESS)"
-        sleep 1
-    else
-        echo "$(get_text IPTABLES_ALREADY_INSTALLED)"
-        sleep 1
-    fi
-
-    echo "$(get_text APPLYING_IPTABLES)"
     sleep 2
-
-    sudo iptables -F INPUT
-
-
-    sudo iptables -P INPUT DROP
-    
-
-    # Разрешаем весь трафик на loopback-интерфейсе
-    sudo iptables -A INPUT -i lo -j ACCEPT
-
-    # Разрешаем уже установленные и связанные с ними соединения.
-    sudo iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-
-    echo "-> $(get_text "FIREWALL_ALLOWING_SSH") $SSH_PORT"
-    sudo iptables -A INPUT -p tcp --dport "$SSH_PORT" -j ACCEPT
-
-    echo "-> $(get_text "FIREWALL_ALLOWING_WEB")"
-    sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
-    sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-
-    echo "-> $(get_text "FIREWALL_ALLOWING_NODE") $IP_PANEL"
-    sudo iptables -A INPUT -p tcp -s "$IP_PANEL" --dport 2222 -j ACCEPT
-
-    echo ""
-    echo "$(get_text IPTABLES_SUCCESS)"
-    sleep 1
-    echo "$(get_text FIREWALL_SETUP_COMPLETE)"
-    sleep 1
 }
-select_vpn_method() {
-    clear
-    echo -e "1) 👻 Reality: ${WHITE}маскировка под чужие сайты (по умолчанию)${NC}"
-    echo -e "2) 🕵️ Reality+ Selfsteal: ${WHITE}кража отпечатка с собственного сайта${NC}"
-    echo "================================================="
-    read -p "Выберите опцию (1 или 2): " VPN_CHOICE
 
-    if [[ "$VPN_CHOICE" == "2" ]]; then
-        install_caddy_docker_remnanode
+# Функция-обертка для запуска ноды, которая проверяет логи
+run_remnanode_and_check_logs() {
+    cd /opt/remnanode
+    echo "$(get_text START_REMNANODE_CONTAINER)"
+    sudo docker-compose up -d
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}$(get_text ERROR_START_REMNANODE)${NC}"
+        return 1
+    fi
+
+    echo "$(get_text REMNANODE_SETUP_COMPLETE)"
+    sleep 4
+
+    echo -e "\n--- $(get_text CHECK_REMNANODE_LOGS_HEADER) ---"
+    if sudo docker logs remnanode 2>&1 | grep -q "spawn xray error"; then
+        echo -e "${RED}$(get_text ERROR_LOGS_FOUND)${NC}"
+        echo "$(get_text ERROR_LOGS_REASONS)"
+        echo "$(get_text ERROR_LOGS_HINT)"
     else
-        echo -e "Вы выбрали ${ORANGE}Reality${NC} (маскировка под чужие сайты). Установка Caddy будет пропущена."
+        echo -e "${GREEN}$(get_text LOGS_CLEAN)${NC}"
+    fi
+    sleep 2
+}
+
+select_vpn_method() {
+    local choice_index
+    declare -a vpn_options=(
+        "$(get_text "VPN_METHOD_REALITY")"
+        "$(get_text "VPN_METHOD_SELFSTEAL")"
+    )
+
+    select_menu \
+        vpn_options \
+        "" \
+        choice_index \
+        "$(get_text "VPN_METHOD_SELECT_HEADER")" \
+        "$(get_text "VPN_METHOD_PROMPT")"
+
+    if [ "$choice_index" -eq 1 ]; then
+        # --- Режим Self-steal ---
+        echo -e "\n${CYAN}$(get_text "SELFSTEAL_MODE_SELECTED")${NC}"
         sleep 2
+        install_caddy_for_remnanode
+    else
+        # --- Режим Reality ---
+        echo -e "\n${CYAN}$(get_text "REALITY_MODE_SELECTED")${NC}"
+        sleep 2
+        # Если Caddy запущен, останавливаем его, чтобы освободить порты 80/443
+        if sudo docker ps --format '{{.Names}}' | grep -q "caddy"; then
+            echo "$(get_text "CADDY_STOPPING_FOR_REALITY")"
+            if sudo docker stop caddy; then
+                echo "$(get_text "CADDY_STOPPED_SUCCESS")"
+            else
+                echo -e "${RED}$(get_text "CADDY_STOP_FAILED")${NC}"
+            fi
+            sleep 2
+        fi
     fi
 }
 
 run_full_install() {
     install_docker
     setup_remnanode
-    select_vpn_method
+    select_vpn_method # Эта функция теперь устанавливает Caddy при необходимости
     setup_firewall
-    echo "$(get_text FULL_INSTALL_COMPLETE)"
+    run_remnanode_and_check_logs # Запускаем ноду и проверяем логи в конце
+    echo -e "\n${GREEN}🎉 $(get_text FULL_INSTALL_COMPLETE)${NC}"
 }
 cleanup_remnanode() {
     echo -e "${ORANGE}$(get_text CLEANUP_START)${NC}"
