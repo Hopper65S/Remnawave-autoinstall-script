@@ -298,6 +298,7 @@ delete_menu() {
         echo ""
         declare -a delete_menu_options
         delete_menu_options=(
+            "$(get_text MENU_CLEANUP_PANEL)"
             "$(get_text MENU_CLEANUP_NODE)"
             "$(get_text MENU_UNINSTALL_SCRIPT)"
             "$(get_text MENU_BACK)"
@@ -311,9 +312,10 @@ delete_menu() {
             "$(get_text MENU_PROMPT)"
         
         case "$choice_index" in
-            0) cleanup_remnanode; sleep 1 ;;
-            1) uninstall_script ;;
-            2) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
+            0) cleanup_remnanode ;;
+            1) cleanup_remnawave ;;
+            2) uninstall_script ;;
+            3) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
         esac
     done
 }

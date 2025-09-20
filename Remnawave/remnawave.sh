@@ -437,3 +437,45 @@ check_panel_status() {
     echo -e "${YELLOW}Нажмите Enter, чтобы продолжить...${NC}"
     read -r
 }
+cleanup_remnawave() {
+    clear
+    echo -e "${ORANGE}$(get_text "CLEANUP_PANEL_HEADER")${NC}"
+    echo "---"
+
+    # Показываем предупреждение красным цветом и запрашиваем подтверждение
+    if yn_prompt "${RED}$(get_text "CLEANUP_PANEL_WARNING")${NC}"; then
+        echo ""
+        echo -e "${ORANGE}$(get_text "CLEANUP_START")${NC}"
+        sleep 2
+
+        # Проверяем, существует ли директория, чтобы избежать ошибок
+        if [ -d "/opt/remnawave" ]; then
+            cd /opt/remnawave
+
+            # Эта команда - лучший способ удалить все компоненты compose-проекта
+            echo "$(get_text "CLEANUP_PANEL_COMPONENTS")"
+            sudo docker compose down --volumes
+            echo -e "${GREEN}$(get_text "CLEANUP_PANEL_COMPONENTS_SUCCESS")${NC}"
+            sleep 1
+
+            # Возвращаемся на уровень выше, чтобы безопасно удалить папку
+            cd ..
+            echo "$(get_text "CLEANUP_PANEL_DIR")"
+            sudo rm -rf /opt/remnawave
+            echo -e "${GREEN}$(get_text "CLEANUP_PANEL_DIR_SUCCESS")${NC}"
+            sleep 1
+        else
+            echo -e "${YELLOW}$(get_text "CLEANUP_PANEL_NOT_FOUND")${NC}"
+            sleep 2
+        fi
+
+        echo -e "\n${ORANGE}$(get_text "CLEANUP_COMPLETE")${NC}"
+        sleep 3
+        start # Возвращаемся в главное меню
+    else
+        # Если пользователь ответил "Нет"
+        echo -e "\n${YELLOW}$(get_text "OPERATION_CANCELLED")${NC}"
+        sleep 2
+        start # Возвращаемся в главное меню
+    fi
+}
