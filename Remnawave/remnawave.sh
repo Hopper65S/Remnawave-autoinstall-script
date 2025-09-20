@@ -448,42 +448,40 @@ cleanup_remnawave() {
         echo -e "${ORANGE}$(get_text "CLEANUP_START")${NC}"
         sleep 2
 
-        # Проверяем, существует ли директория, чтобы избежать ошибок
+        # Список всех контейнеров, связанных с панелью
+        local CONTAINERS_TO_REMOVE="remnawave remnawave-db remnawave-redis caddy"
+        
+        # --- ПОСЛЕДОВАТЕЛЬНОЕ УДАЛЕНИЕ КОНТЕЙНЕРОВ ---
+        for container in $CONTAINERS_TO_REMOVE; do
+            echo "$(get_text "CLEANUP_PANEL_REMOVING_CONTAINER") ${ORANGE}$container${NC}..."
+            # Используем rm -f, чтобы принудительно остановить и удалить контейнер, даже если он запущен.
+            # &>/dev/null скрывает ошибку, если контейнера не существует.
+            sudo docker rm -f "$container" &>/dev/null
+            sleep 0.5
+        done
+
+        # --- ПОСЛЕДУЮЩАЯ ОЧИСТКА РЕСУРСОВ ---
+
+        # Удаляем тома ПОСЛЕ удаления всех контейнеров, которые их использовали
+        echo "$(get_text "CLEANUP_PANEL_REMOVING_VOLUMES")"
+        sudo docker volume rm remnawave_postgres-data remnawave_redis-data caddy-ssl-data &>/dev/null
+        sleep 1
+
+        # Удаляем сеть ПОСЛЕ удаления всех контейнеров
+        echo "$(get_text "CLEANUP_PANEL_REMOVING_NETWORK")"
+        sudo docker network rm remnawave-network &>/dev/null
+        sleep 1
+
+        echo -e "${GREEN}$(get_text "CLEANUP_PANEL_SUCCESS")${NC}"
+
+        # Удаляем директорию с файлами, если она существует
         if [ -d "/opt/remnawave" ]; then
-            
-
-            # 1. Останавливаем все контейнеры по именам
-            echo "$(get_text "CLEANUP_PANEL_STOPPING_CONTAINERS")"
-            sudo docker stop remnawave remnawave-db remnawave-redis caddy &>/dev/null
-            sleep 1
-
-            # 2. Удаляем все контейнеры
-            echo "$(get_text "CLEANUP_PANEL_REMOVING_CONTAINERS")"
-            sudo docker rm remnawave remnawave-db remnawave-redis caddy &>/dev/null
-            sleep 1
-            
-            # 3. Удаляем тома с данными. Это самый важный шаг для полной очистки.
-            # Названия томов обычно: remnawave_postgres-data, remnawave_redis-data, caddy-ssl-data
-            echo "$(get_text "CLEANUP_PANEL_REMOVING_VOLUMES")"
-            sudo docker volume rm remnawave_postgres-data remnawave_redis-data caddy-ssl-data &>/dev/null
-            sleep 1
-
-            # 4. Удаляем сеть, созданную для проекта
-            echo "$(get_text "CLEANUP_PANEL_REMOVING_NETWORK")"
-            sudo docker network rm remnawave-network &>/dev/null
-            sleep 1
-
-            echo -e "${GREEN}$(get_text "CLEANUP_PANEL_SUCCESS")${NC}"
-            
-            # 5. Удаляем директорию с файлами
             echo "$(get_text "CLEANUP_PANEL_DIR")"
             sudo rm -rf /opt/remnawave
             echo -e "${GREEN}$(get_text "CLEANUP_PANEL_DIR_SUCCESS")${NC}"
             sleep 1
-
         else
             echo -e "${YELLOW}$(get_text "CLEANUP_PANEL_NOT_FOUND")${NC}"
-            sleep 2
         fi
 
         echo -e "\n${ORANGE}$(get_text "CLEANUP_COMPLETE")${NC}"

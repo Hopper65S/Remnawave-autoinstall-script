@@ -404,6 +404,7 @@ lang_ru=(
     ["CLEANUP_RESTART_SUCCESS"]="✅ Docker-сервис успешно перезапущен."
     ["CLEANUP_COMPLETE"]="✅ Очистка завершена. Система вернулась в исходное состояние."
     #Remnawave.sh
+    ["CLEANUP_PANEL_REMOVING_CONTAINER"]="🗑️ Удаление контейнера:"
     ["CLEANUP_PANEL_STOPPING_CONTAINERS"]="⏹️ Остановка контейнеров (remnawave, db, redis, caddy)..."
     ["CLEANUP_PANEL_REMOVING_CONTAINERS"]="🗑️ Удаление контейнеров..."
     ["CLEANUP_PANEL_REMOVING_VOLUMES"]="🗂️ Удаление томов с данными (включая БД)..."
