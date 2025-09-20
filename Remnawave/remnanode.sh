@@ -197,7 +197,12 @@ services:
         volumes:
             - ./Caddyfile:/etc/caddy/Caddyfile
             - ./www:/var/www/html
-            - caddy_data:/data
+            - caddy-ssl-data:/data
+volumes:
+    caddy-ssl-data:
+        driver: local
+        external: false
+        name: caddy-ssl-data
 COMPOSE_EOF
     )
     echo "$COMPOSE_CONTENT" | sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null
