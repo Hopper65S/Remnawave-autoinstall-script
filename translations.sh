@@ -308,6 +308,10 @@ lang_ru=(
     ["API_REG_FAILED"]="❌ ОШИБКА: Не удалось зарегистрировать пользователя."
     ["API_REG_SERVER_RESPONSE"]="❗ Ответ сервера: "
     #Remnanode.sh
+    ["FIREWALL_IP_PANEL_NOT_FOUND"]="Переменная IP_PANEL не найдена в памяти."
+    ["FIREWALL_READING_ENV"]="Пытаюсь прочитать значение из файла .env..."
+    ["FIREWALL_IP_PANEL_READ_SUCCESS"]="✅ IP панели успешно загружен:"
+    ["FIREWALL_IP_PANEL_READ_FAIL"]="❌ Не удалось найти IP_PANEL в .env. Правило для ноды будет пропущено."
     ["FIREWALL_ADDING_RULE"]="➕ Добавление правила:"
     ["FIREWALL_RULE_EXISTS"]="✅ Правило уже существует, пропускаем."
     ["FIREWALL_ALLOW_ESTABLISHED"]="Разрешение установленных соединений"
