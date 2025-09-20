@@ -137,7 +137,7 @@ install_caddy_for_remnanode() {
     echo "$(get_text CADDY_INSTALL_START)"
     sleep 1
     
-    if ! command -v docker &> /dev/null || ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker &> /dev/null || ! command -v docker compose &> /dev/null; then
         echo "$(get_text DOCKER_COMPOSE_NOT_INSTALLED)"
         echo "$(get_text DOCKER_COMPOSE_NOT_INSTALLED_HINT)"
         return 1
@@ -154,7 +154,7 @@ install_caddy_for_remnanode() {
             echo "$(get_text CADDY_CONTAINER_DELETING)"
             # Убедимся, что мы в нужной директории, чтобы `down` сработал
             if [ -f "$CADDY_DIR/docker-compose.yml" ]; then
-                (cd "$CADDY_DIR" && sudo docker-compose down -v)
+                (cd "$CADDY_DIR" && sudo docker compose down -v)
             fi
             sudo docker rm -f remnanode-caddy &>/dev/null
             echo "$(get_text CADDY_CONTAINER_DELETED)"
@@ -208,7 +208,7 @@ EOF
 
     # 2. Запускаем Caddy с этой конфигурацией
     cd "$CADDY_DIR"
-    sudo docker-compose up -d
+    sudo docker compose up -d
     if [ $? -ne 0 ]; then
         echo -e "${RED}$(get_text ERROR_START_CADDY)${NC}"
         return 1
@@ -235,7 +235,7 @@ EOF
         echo -e "${RED}$(get_text "CADDY_CERT_FAILED")${NC}"
         sudo docker logs remnanode-caddy --tail 15
         # Даже в случае ошибки, пытаемся "прибраться"
-        (cd "$CADDY_DIR" && sudo docker-compose down -v)
+        (cd "$CADDY_DIR" && sudo docker compose down -v)
         return 1
     fi
 
@@ -263,7 +263,7 @@ volumes:
 EOF
     
     # 6. Применяем новую конфигурацию (Docker Compose сам остановит и пересоздаст контейнер)
-    sudo docker-compose up -d --force-recreate
+    sudo docker compose up -d --force-recreate
     echo -e "${GREEN}$(get_text "CADDY_RECONFIGURED_SUCCESS")${NC}"
 
     # Конфигурация заглушки
