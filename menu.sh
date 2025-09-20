@@ -312,8 +312,8 @@ delete_menu() {
             "$(get_text MENU_PROMPT)"
         
         case "$choice_index" in
-            0) cleanup_remnanode ;;
-            1) cleanup_remnawave ;;
+            0) cleanup_remnawave ;;
+            1) cleanup_remnanode ;;
             2) uninstall_script ;;
             3) echo "$(get_text RETURNING)"; sleep 1; start; ;; 
         esac
