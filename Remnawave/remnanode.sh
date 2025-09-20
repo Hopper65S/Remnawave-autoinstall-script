@@ -137,15 +137,12 @@ install_caddy_for_remnanode() {
     echo "$(get_text CADDY_INSTALL_START)"
     sleep 1
     
-    if ! command -v docker &> /dev/null || ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker &> /dev/null || ! command -v docker compose &> /dev/null; then
         echo "$(get_text DOCKER_COMPOSE_NOT_INSTALLED)"
         echo "$(get_text DOCKER_COMPOSE_NOT_INSTALLED_HINT)"
         return 1
     fi
     
-    # Создаем сеть, если она не существует
-    create_remnanode_network
-    if [ $? -ne 0 ]; then return 1; fi
 
     # Используем отдельную папку для Caddy, чтобы не было конфликтов
     local CADDY_DIR="/opt/remnanode_caddy"
