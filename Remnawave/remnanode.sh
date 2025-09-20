@@ -156,38 +156,43 @@ install_caddy_for_remnanode() {
     
     local CADDY_DIR="/opt/remnanode_caddy"
     
+    # Шаг 1: Принудительно останавливаем и удаляем старый контейнер, если он существует.
     if sudo docker ps -a --format '{{.Names}}' | grep -q "^remnanode-caddy$"; then
         echo "$(get_text CADDY_CONTAINER_DELETING)"
         sudo docker rm -f remnanode-caddy &>/dev/null
         echo "$(get_text CADDY_CONTAINER_DELETED)"
     fi
 
+    # Шаг 2: Создаем директории
     echo "$(get_text CREATE_CADDY_DIRS)"
     sudo mkdir -p "$CADDY_DIR/www"
     
+    # Шаг 3: Создаем Caddyfile. УБРАНА вся логика с доменами и SSL.
+    # Caddy будет просто слушать порт 8443 и отдавать статику.
     echo "$(get_text CREATE_CADDYFILE)"
     local CADDYFILE_CONTENT
-    CADDYFILE_CONTENT=$(cat <<-EOF
+    CADDYFILE_CONTENT=$(cat <<-CADDYFILE_EOF
 		$CADDY_DOMAIN:8443 {
-		    root * /var/www/html
-		    file_server {
-		        index index.html
-		    }
-		}
-	EOF
+	    root * /var/www/html
+	    file_server {
+	        index index.html
+	    }
+	}
+	CADDYFILE_EOF
     )
     echo "$CADDYFILE_CONTENT" | sudo tee "$CADDY_DIR/Caddyfile" > /dev/null
     echo "$(get_text SUCCESS_CADDYFILE)"
 
+    # Шаг 4: Создаем docker-compose.yml. УБРАНЫ порты 80 и 443.
     local COMPOSE_CONTENT
-    COMPOSE_CONTENT=$(cat <<-EOF
+    COMPOSE_CONTENT=$(cat <<-COMPOSE_EOF
 		services:
 		  caddy:
 		    image: caddy:latest
 		    container_name: remnanode-caddy
 		    restart: always
 		    ports:
-		      - "80:80"
+              - "80:80"
 		      - "8443:8443"
 		    volumes:
 		      - ./Caddyfile:/etc/caddy/Caddyfile
@@ -195,22 +200,18 @@ install_caddy_for_remnanode() {
 		      - caddy_data:/data
 		volumes:
 		  caddy_data:
-	EOF
+	COMPOSE_EOF
     )
     echo "$COMPOSE_CONTENT" | sudo tee "$CADDY_DIR/docker-compose.yml" > /dev/null
     
-    # --- НОВАЯ УЛУЧШЕННАЯ ЛОГИКА ЗАПУСКА И ПРОВЕРКИ ---
-    
+    # Шаг 5: Запускаем Caddy
     echo "$(get_text START_CADDY_CONTAINER)"
     cd "$CADDY_DIR"
-    
-    # Запускаем контейнер. Вывод перенаправляем в /dev/null, чтобы он не мешал.
     sudo docker compose up -d &>/dev/null
     
-    # Активно проверяем, что контейнер действительно запустился
+    # Шаг 6: Проверяем, что контейнер запустился
     echo "$(get_text WAITING_FOR_CONTAINER_START)"
     for i in {1..10}; do
-        # Проверяем статус контейнера
         if sudo docker ps --filter "name=remnanode-caddy" --filter "status=running" | grep -q "remnanode-caddy"; then
             echo -e "${GREEN}$(get_text CONTAINER_START_SUCCESS)${NC}"
             break
@@ -218,39 +219,13 @@ install_caddy_for_remnanode() {
         sleep 2
     done
 
-    # Если после 20 секунд контейнер так и не запустился, выходим с ошибкой
     if ! sudo docker ps --filter "name=remnanode-caddy" --filter "status=running" | grep -q "remnanode-caddy"; then
         echo -e "${RED}$(get_text ERROR_START_CADDY)${NC}"
-        # Показываем логи для отладки
         sudo docker logs remnanode-caddy --tail 20
         return 1
     fi
     
-    # --- КОНЕЦ НОВОЙ ЛОГИКИ ---
-
-    echo "$(get_text "CADDY_WAITING_FOR_CERT")"
-    local cert_obtained=false
-    for i in {1..18}; do
-        if sudo docker logs remnanode-caddy 2>&1 | grep -q 'certificate obtained successfully'; then
-            cert_obtained=true
-            break
-        fi
-        if sudo docker logs remnanode-caddy 2>&1 | grep -q 'could not get certificate'; then
-            break
-        fi
-        sleep 5
-    done
-    
-    if [ "$cert_obtained" = true ]; then
-        echo -e "${GREEN}$(get_text "CADDY_CERT_SUCCESS")${NC}"
-    else
-        echo -e "${RED}$(get_text "CADDY_CERT_FAILED")${NC}"
-        sudo docker logs remnanode-caddy --tail 15
-        (cd "$CADDY_DIR" && sudo docker compose down -v)
-        return 1
-    fi
-
-    # ... остальной код (конфигурация заглушки и т.д.) ...
+    # Шаг 7: Конфигурация заглушки
     echo -e "\n--- $(get_text WEBPAGE_SETUP_HEADER) ---"
     read -p "$(get_text ENTER_WEBPAGE_PATH)" WEB_FILE_PATH
     if [[ -n "$WEB_FILE_PATH" && "$WEB_FILE_PATH" != "0" ]]; then
@@ -264,8 +239,8 @@ install_caddy_for_remnanode() {
         echo "$(get_text WEBPAGE_SKIP)"
     fi
     
-    sleep 3
-    echo "$(get_text CADDY_INSTALL_COMPLETE)"
+    sleep 1
+    echo -e "\n${GREEN}$(get_text CADDY_INSTALL_COMPLETE)${NC}"
     sleep 2
 }
 
